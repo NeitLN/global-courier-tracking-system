@@ -11,15 +11,12 @@ Please refer to the following files for the authoritative rules and project stat
 - [PHASE_PROGRESS.md](./docs/PHASE_PROGRESS.md)
 
 ## Current Stage
-**Phase 1 — Repository and Development Foundation**
+**Phase 2 — Supabase Database Migrations** (COMPLETE)
 
 *Explicit limitations of the current phase:*
-- Database schema not implemented.
-- Remote Supabase project not linked.
-- Auth not implemented.
-- RLS not implemented.
-- Application modules not implemented.
-- Final courier UI not implemented.
+- Local database structural schema is fully implemented and validated.
+- Remote Supabase database has not been migrated yet.
+- F1-F10, complex triggers, Auth, RLS, and UI modules do not exist yet.
 
 ## Technology Foundation
 - Next.js (App Router)
