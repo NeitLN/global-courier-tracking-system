@@ -1,4 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Global Courier & Tracking System
+
+This is the repository for the Global Courier & Tracking System, built with Next.js and Supabase as part of a Database Management Systems project.
+
+## Documentation
+Please refer to the following files for the authoritative rules and project state:
+- [PROJECT_SOURCE_OF_TRUTH.md](./docs/PROJECT_SOURCE_OF_TRUTH.md)
+- [STATUS_FLOW.md](./docs/STATUS_FLOW.md)
+- [TRACEABILITY_MATRIX.md](./docs/TRACEABILITY_MATRIX.md)
+- [DECISION_LOG.md](./docs/DECISION_LOG.md)
+- [PHASE_PROGRESS.md](./docs/PHASE_PROGRESS.md)
 
 ## Getting Started
 

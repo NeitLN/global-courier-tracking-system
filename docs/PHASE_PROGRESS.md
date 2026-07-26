@@ -1,0 +1,30 @@
+# Phase Progress
+
+Current phase execution for the Global Courier & Tracking System project.
+
+- [ ] **Phase 0: Audit and source-of-truth freeze** (IN PROGRESS)
+  - [x] Repository audit
+  - [x] Create PROJECT_SOURCE_OF_TRUTH.md
+  - [x] Create STATUS_FLOW.md
+  - [x] Create TRACEABILITY_MATRIX.md
+  - [x] Create PHASE_PROGRESS.md
+  - [x] Create DECISION_LOG.md
+  - [x] Minimal README update
+- [ ] **Phase 1: Repository and development foundation**
+- [ ] **Phase 2: Supabase database migrations**
+- [ ] **Phase 3: Database functions, triggers and analytics**
+- [ ] **Phase 4: Authentication and role profiles**
+- [ ] **Phase 5: RLS and authorization**
+- [ ] **Phase 6: Design system and application shell**
+- [ ] **Phase 7: Dashboard and KPI implementation**
+- [ ] **Phase 8: Package registration workflow**
+- [ ] **Phase 9: Real-time tracking interface**
+- [ ] **Phase 10: Dispatch and routing management**
+- [ ] **Phase 11: Trip and leg assignments**
+- [ ] **Phase 12: Scan recording and checkpoint workflows**
+- [ ] **Phase 13: Customer management interface**
+- [ ] **Phase 14: Hub inventory and transit analytics**
+- [ ] **Phase 15: Driver performance reporting**
+- [ ] **Phase 16: SLA compliance tracking**
+- [ ] **Phase 17: Multi-hop route planning UI**
+- [ ] **Phase 18: Final review and system hardening**
