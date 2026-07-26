@@ -3,7 +3,7 @@
 This document outlines both the automated and manual testing procedures for the Phase 4 authentication implementation.
 
 ## Automated Database Tests (pgTAP)
-Database integrity is verified automatically using the local pgTAP test suite.
+Database integrity is verified automatically using the local pgTAP test suite (189/189 assertions passing).
 Run tests using:
 ```bash
 npx supabase test db

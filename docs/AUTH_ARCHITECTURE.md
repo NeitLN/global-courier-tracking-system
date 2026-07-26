@@ -1,5 +1,7 @@
 # Auth Architecture
 
+*Phase 4 remote deployment and recovery completion have been verified. Auth profiles and session foundation are active.*
+
 ## 1. Credentials and Sessions
 Supabase Auth is the authoritative owner of user credentials and sessions. The application leverages `@supabase/ssr` to synchronize session state between the Next.js server components, server actions, and the browser.
 

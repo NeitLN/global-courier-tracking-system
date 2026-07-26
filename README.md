@@ -11,12 +11,12 @@ Please refer to the following files for the authoritative rules and project stat
 - [PHASE_PROGRESS.md](./docs/PHASE_PROGRESS.md)
 
 ## Current Stage
-**Phase 4 — Authentication and role profiles** (IN PROGRESS)
+**Phase 4 — Authentication and role profiles** (COMPLETE)
 
 *Explicit limitations of the current phase:*
 - Phase 3 functions and triggers are implemented and locally synchronized.
-- Phase 4 implements Supabase Auth, SSR clients, and public.profiles.
-- Current database validation is 188/188 tests passing.
+- Phase 4 implements Supabase Auth, SSR clients, and public.profiles. Auth profiles and session foundation are remotely deployed and verified.
+- Current database validation is 189/189 tests passing.
 - Phase 5 is NOT STARTED.
 - **WARNING:** RLS is not implemented until Phase 5, so real or sensitive data and public application access must not be enabled yet.
 
