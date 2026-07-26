@@ -39,7 +39,9 @@ Current phase execution for the Global Courier & Tracking System project.
   - [x] Migrations, seed, pgTAP tests, database lint, npm validation, and external Claude review passed.
   - [x] Final pgTAP result: 87/87 assertions passed.
   - [x] Remote database deployment has not yet occurred.
-- [ ] **Phase 3: Database functions, triggers and analytics** (IN PROGRESS)
+- [x] **Phase 3: Database functions, triggers and analytics** (COMPLETE)
+  - [x] 156/156 pgTAP assertions passed.
+  - [x] Corrective migration 20260726183243 is remotely deployed and verified.
 - [ ] **Phase 4: Authentication and role profiles**
 - [ ] **Phase 5: RLS and authorization**
 - [ ] **Phase 6: Design system and application shell**
