@@ -25,6 +25,9 @@ INSERT INTO public.customer (customer_id, full_name, email, phone) VALUES
 INSERT INTO public.service_type (service_id, service_name, base_rate, per_kg_rate, sla_hours, max_weight_kg) VALUES 
 (901, 'Standard Test', 10.0, 2.0, 48, 20.0);
 
+SELECT set_config('request.jwt.claims', jsonb_build_object('role', 'service_role')::text, true);
+SET LOCAL ROLE service_role;
+
 INSERT INTO public.package (package_id, tracking_no, sender_id, receiver_id, service_id, weight_kg, origin_hub_id, dest_hub_id, current_status) VALUES
 (9001, 'TRK-9001', 901, 902, 901, 5.0, 901, 902, 'DELIVERED'),
 (9002, 'TRK-9002', 901, 902, 901, 5.0, 901, 902, 'DELIVERED'),

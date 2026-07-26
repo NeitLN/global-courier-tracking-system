@@ -14,6 +14,9 @@ INSERT INTO public.route (origin_hub_id, dest_hub_id, mode, distance_km, planned
 (903, 904, 'TRUCK', 200.0, 4.0),
 (903, 901, 'TRUCK', 300.0, 6.0); -- Cycle possibility
 
+SELECT set_config('request.jwt.claims', jsonb_build_object('role', 'service_role')::text, true);
+SET LOCAL ROLE service_role;
+
 -- 1. F10: Direct route (901 -> 902)
 SELECT results_eq(
     $$ SELECT path_array, total_distance_km FROM public.fn_find_routes(901, 902) $$,

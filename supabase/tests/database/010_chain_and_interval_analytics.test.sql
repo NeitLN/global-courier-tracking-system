@@ -1,14 +1,13 @@
 BEGIN;
 SELECT plan(4);
-
 -- Fixture
 INSERT INTO public.transit_hub (hub_id, hub_code, hub_name) VALUES 
 (901, 'TST-01', 'Test Hub 1'),
 (902, 'TST-02', 'Test Hub 2');
 
 INSERT INTO public.staff (staff_id, full_name, hub_id) VALUES 
-(901, 'Staff 1', 901),
-(902, 'Staff 2', 902);
+(901, 'Staff Hub 1', 901),
+(902, 'Staff Hub 2', 902);
 
 INSERT INTO public.customer (customer_id, full_name, email, phone) VALUES 
 (901, 'Sender', 'sender@test.com', '555-1001'),
@@ -17,6 +16,10 @@ INSERT INTO public.customer (customer_id, full_name, email, phone) VALUES
 INSERT INTO public.service_type (service_id, service_name, base_rate, per_kg_rate, sla_hours, max_weight_kg) VALUES 
 (901, 'Standard Test', 10.0, 2.0, 48, 20.0);
 
+SELECT set_config('request.jwt.claims', jsonb_build_object('role', 'service_role')::text, true);
+SET LOCAL ROLE service_role;
+
+-- Insert Package
 INSERT INTO public.package (package_id, tracking_no, sender_id, receiver_id, service_id, weight_kg, origin_hub_id, dest_hub_id, current_status) VALUES
 (9001, 'TRK-9001', 901, 902, 901, 5.0, 901, 902, 'DELIVERED');
 

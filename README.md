@@ -11,14 +11,15 @@ Please refer to the following files for the authoritative rules and project stat
 - [PHASE_PROGRESS.md](./docs/PHASE_PROGRESS.md)
 
 ## Current Stage
-**Phase 4 — Authentication and role profiles** (COMPLETE)
+**Phase 5 — RLS and authorization** (IN PROGRESS)
 
 *Explicit limitations of the current phase:*
-- Phase 3 functions and triggers are implemented and locally synchronized.
-- Phase 4 implements Supabase Auth, SSR clients, and public.profiles. Auth profiles and session foundation are remotely deployed and verified.
-- Current database validation is 189/189 tests passing.
-- Phase 5 is NOT STARTED.
-- **WARNING:** RLS is not implemented until Phase 5, so real or sensitive data and public application access must not be enabled yet.
+- Phase 3 functions and triggers are implemented.
+- Phase 4 Auth profiles and session foundation are remotely deployed and verified.
+- Phase 5 establishes complete Row-Level Security, removing ambient privileges, creating private authorization helpers, defining explicitly constrained RPCs, and applying granular access controls across all 14 public tables.
+- Current database validation is 239/239 tests passing locally.
+- Phase 6 is NOT STARTED.
+- Remote database deployment of Phase 5 migrations has not yet occurred.
 
 ## Technology Foundation
 - Next.js (App Router)

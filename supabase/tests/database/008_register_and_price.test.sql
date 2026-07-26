@@ -13,6 +13,9 @@ INSERT INTO public.customer (customer_id, full_name, email, phone) VALUES
 INSERT INTO public.service_type (service_id, service_name, base_rate, per_kg_rate, sla_hours, max_weight_kg) VALUES 
 (901, 'Standard Test', 10.0, 2.0, 48, 20.0);
 
+SELECT set_config('request.jwt.claims', jsonb_build_object('role', 'service_role')::text, true);
+SET LOCAL ROLE service_role;
+
 -- 1. Test sender = receiver rejected
 PREPARE test_same_customer AS
 SELECT public.fn_register_package(901, 901, 901, 5.0, 10, 10, 10, 901, 902);
@@ -101,5 +104,6 @@ SELECT isnt(
     'Rapid F1 calls generate distinct tracking numbers (retry branch reviewed statically)'
 );
 
+RESET ROLE;
 SELECT * FROM finish();
 ROLLBACK;

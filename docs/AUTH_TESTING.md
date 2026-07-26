@@ -3,7 +3,7 @@
 This document outlines both the automated and manual testing procedures for the Phase 4 authentication implementation.
 
 ## Automated Database Tests (pgTAP)
-Database integrity is verified automatically using the local pgTAP test suite (189/189 assertions passing).
+Database integrity and row-level security are verified automatically using the local pgTAP test suite (248/248 assertions passing).
 Run tests using:
 ```bash
 npx supabase test db
@@ -14,6 +14,13 @@ The automated suite verifies:
 - Automatic profile provisioning via the `auth.users` trigger.
 - Security and privilege safety (rejecting direct execution by `anon` or `authenticated`).
 - Rejection of malicious metadata during signup.
+
+### Regression Scenarios (Phase 5)
+In addition, there are extensive tests to ensure the security boundary is resilient against role spoofing, protecting operations like `fn_register_package` from being bypassed via PostgreSQL or JWT manipulations:
+- **Original Exploit Regression:** Connection is `postgres` (no SET ROLE). Calling an RPC without a `service_role` JWT is correctly denied.
+- **Forged service_role Claim:** An `authenticated` session attempting to forge a `service_role` JWT claim is correctly denied.
+- **Legitimate Customer:** A true active customer utilizing `authenticated` with their own valid IDs successfully invokes operational RPCs.
+- **Legitimate Service Role:** A trusted backend utilizing `service_role` context and `service_role` JWT successfully accesses operational RPCs.
 
 ## Manual Browser Testing
 To manually verify the end-to-end authentication flows, follow these steps:

@@ -131,8 +131,8 @@ SELECT cmp_ok(
 -- 26. anon has no direct table access to public.profiles.
 SELECT table_privs_are('public', 'profiles', 'anon', ARRAY[]::text[], '26. anon has no direct table access to public.profiles.');
 
--- 27. authenticated has no direct table access to public.profiles.
-SELECT table_privs_are('public', 'profiles', 'authenticated', ARRAY[]::text[], '27. authenticated has no direct table access to public.profiles.');
+-- 27. authenticated has SELECT access to public.profiles.
+SELECT table_privs_are('public', 'profiles', 'authenticated', ARRAY['SELECT']::text[], '27. authenticated has SELECT access to public.profiles.');
 
 -- 28. Internal trigger functions are not directly executable by anon.
 SELECT function_privs_are('public', 'fn_handle_new_auth_user', ARRAY[]::text[], 'anon', ARRAY[]::text[], '28. fn_handle_new_auth_user not executable by anon.');

@@ -28,6 +28,9 @@ The provisioning function (`fn_handle_new_auth_user`) runs with `SECURITY DEFINE
 Role assignment is a privileged operational action and is intentionally deferred. In Phase 4, the application provides no mechanism for users to self-assign roles or identity bindings. 
 
 ## 6. Access and Exposure
-- `public.profiles` is not directly exposed to application clients before Phase 5. Direct `SELECT`, `UPDATE`, `INSERT`, and `DELETE` access have been explicitly revoked from `PUBLIC`, `anon`, and `authenticated`.
-- Row Level Security (RLS) for the 13 core domain tables, as well as role-based authorization for the operational dashboards, belong strictly to Phase 5.
-- **No real or sensitive operational data should be exposed to or queried by the application before Phase 5 RLS is completely implemented.**
+- `public.profiles` is exposed via RLS strictly for self-selection (`user_id = auth.uid()`).
+- Row Level Security (RLS) is fully enforced for all 14 domain relations. Ambient privileges are revoked, and all access requires explicit application roles evaluated by `authz_private` helpers.
+- **Direct Domain DML (INSERT, UPDATE, DELETE) is explicitly denied for all application roles.**
+- Mutations to domain data are restricted to explicitly crafted and secured `SECURITY DEFINER` RPCs (e.g. `fn_register_package`, `fn_record_checkpoint_scan`, `fn_update_customer`), which perform caller identity verification before writing.
+- **DISPATCHER** and **ANALYST** roles have global read access to operational tables, but direct SELECT on PII tables (`customer`, `staff`, `driver`) is restricted.
+- The schema `authz_private` is strictly isolated from PostgREST and contains `SECURITY DEFINER` context helpers.

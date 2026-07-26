@@ -13,6 +13,9 @@ INSERT INTO public.customer (customer_id, full_name, email, phone) VALUES
 INSERT INTO public.service_type (service_id, service_name, base_rate, per_kg_rate, sla_hours, max_weight_kg) VALUES 
 (901, 'Standard Test', 10.0, 2.0, 48, 20.0);
 
+SELECT set_config('request.jwt.claims', jsonb_build_object('role', 'service_role')::text, true);
+SET LOCAL ROLE service_role;
+
 -- F1 package registration atomicity
 -- Try to register with an invalid hub (999) which should fail foreign key constraint.
 -- Verify that NO package is created and NO event is created.
