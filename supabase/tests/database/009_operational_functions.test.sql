@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(18);
+SELECT plan(20);
 
 -- Fixture
 INSERT INTO public.transit_hub (hub_id, hub_code, hub_name) VALUES 
@@ -55,6 +55,11 @@ SELECT results_eq(
     $$ VALUES ('newsender@test.com') $$,
     'Customer email updated correctly'
 );
+SELECT results_eq(
+    $$ SELECT phone FROM public.customer WHERE customer_id = 901 $$,
+    $$ VALUES ('555-1001') $$,
+    'Customer phone was not changed by partial email update'
+);
 
 -- 7. F3: REGISTERED with NULL staff rejected
 PREPARE test_registered_null_staff AS
@@ -105,19 +110,26 @@ SELECT throws_like('test_duplicate_phone', '%unique constraint "customer_phone_k
 
 -- 16. F5: NULL preserves existing values
 SELECT results_eq(
-    $$ SELECT full_name FROM public.fn_update_customer(901, p_name := NULL) $$,
-    $$ VALUES ('Sender') $$,
-    'NULL name preserves existing full_name'
+    $$ SELECT full_name || email || phone FROM public.fn_update_customer(901, p_name := NULL, p_email := NULL, p_phone := NULL) $$,
+    $$ VALUES ('Sender' || 'newsender@test.com' || '555-1001') $$,
+    'NULL parameters explicitly preserve existing name, email and phone'
 );
 
 -- 17. F5: No partial mutation after duplicate phone rejection
 SELECT results_eq(
-    $$ SELECT full_name FROM public.customer WHERE customer_id = 902 $$,
-    $$ VALUES ('Receiver') $$,
-    'Rejected duplicate phone update does not partially modify name'
+    $$ SELECT customer_id::text || full_name || email FROM public.customer WHERE customer_id = 902 $$,
+    $$ VALUES ('902Receiverreceiver@test.com') $$,
+    'Rejected duplicate phone update does not partially modify customer_id, name or email'
 );
 
--- 18. F5: No package mutation
+-- 18. F5: No mutation to other customers
+SELECT results_eq(
+    $$ SELECT full_name FROM public.customer WHERE customer_id = 901 $$,
+    $$ VALUES ('Sender') $$,
+    'Rejected call for customer 902 did not mutate another customer (901)'
+);
+
+-- 19. F5: No package mutation
 SELECT results_eq(
     $$ SELECT count(*)::integer FROM public.package $$,
     $$ VALUES (1::integer) $$,

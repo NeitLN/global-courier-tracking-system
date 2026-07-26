@@ -1,22 +1,35 @@
 BEGIN;
-SELECT plan(14);
+SELECT plan(15);
 
--- Test A: exactly 13 approved domain tables exist in public
-SELECT tables_are('public', ARRAY[
-    'status_code',
-    'service_type',
-    'customer',
-    'transit_hub',
-    'staff',
-    'driver',
-    'vehicle',
-    'route',
-    'package',
-    'tracking_event',
-    'trip',
-    'package_leg',
-    'delivery_attempt'
-], 'Exactly 13 domain tables should exist in public schema');
+-- Test B: Authentication support tables
+SELECT has_table('public', 'profiles', 'public.profiles is an authentication-support table.');
+
+-- Test A: exactly 13 approved domain tables exist in public (excluding auth-support profiles)
+SELECT set_eq(
+    $$
+        SELECT table_name::text
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_type = 'BASE TABLE'
+          AND table_name <> 'profiles'
+    $$,
+    ARRAY[
+        'status_code',
+        'service_type',
+        'customer',
+        'transit_hub',
+        'staff',
+        'driver',
+        'vehicle',
+        'route',
+        'package',
+        'tracking_event',
+        'trip',
+        'package_leg',
+        'delivery_attempt'
+    ],
+    'Exactly 13 domain tables should exist in public schema (excluding auth-support profiles)'
+);
 
 SELECT has_table('public', 'status_code', 'Table status_code should exist');
 SELECT has_table('public', 'service_type', 'Table service_type should exist');
