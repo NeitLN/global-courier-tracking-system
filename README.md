@@ -11,12 +11,16 @@ Please refer to the following files for the authoritative rules and project stat
 - [PHASE_PROGRESS.md](./docs/PHASE_PROGRESS.md)
 
 ## Current Stage
-**Phase 2 — Supabase Database Migrations** (COMPLETE)
+**Phase 3 — Database Functions, Triggers, and Analytics** (IN PROGRESS)
 
 *Explicit limitations of the current phase:*
-- Local database structural schema is fully implemented and validated.
-- Remote Supabase database has not been migrated yet.
-- F1-F10, complex triggers, Auth, RLS, and UI modules do not exist yet.
+- Phase 2 migrations are deployed to remote Supabase.
+- The four original Phase 3 migrations were deployed early before final review.
+- The local Phase 3 implementation has since been corrected.
+- Corrective migration `20260726183243` is prepared locally and is pending final review and remote deployment.
+- Phase 3 remains IN PROGRESS.
+- Remote and local Phase 3 behavior will not be considered synchronized until the corrective migration is deployed and verified.
+- Auth, RLS, and UI modules do not exist yet.
 
 ## Technology Foundation
 - Next.js (App Router)

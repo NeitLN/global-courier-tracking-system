@@ -70,6 +70,13 @@ Explicit Indexes:
 - `idx_package_origin_dest`: On `package(origin_hub_id, dest_hub_id)` for routing queries.
 - `idx_tracking_event_hub_time`: On `tracking_event(hub_id, event_time)` for querying events by hub and time. 
 
+Phase 3 Explicit Indexes:
+- `idx_delivery_attempt_driver_time`: On `delivery_attempt(driver_id, attempt_time)` for driver ranking.
+- `idx_tracking_event_pkg_time_desc`: On `tracking_event(package_id, event_time DESC)` primarily supports F4 table-wide latest-event window ordering.
+- `idx_tracking_event_status_time`: General/forward-looking index on `tracking_event(status_code, event_time)` for status flow history queries.
+- `idx_package_service`: On `package(service_id)` supports package-to-service FK joins and possible service-scoped access.
+- `idx_trip_route_depart`: Explicitly labelled forward-looking index on `trip(route_id, depart)` for future route trip matching.
+
 ## Migration Order
 1. `20260726165434_create_reference_tables`
 2. `20260726165435_create_people_and_assets`
