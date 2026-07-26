@@ -46,8 +46,23 @@ Current phase execution for the Global Courier & Tracking System project.
   - [x] Corrective migration 20260726205213 successfully deployed.
   - [x] Migration timestamps 20260726194440 and 20260726205213 match Local and Remote.
   - [x] 189/189 pgTAP assertions passed.
-- [ ] **Phase 5: RLS and authorization** (IN PROGRESS)
-- [ ] **Phase 6: Design system and application shell**
+- [x] **Phase 5: RLS and authorization** (COMPLETE)
+  - [x] 16 local migrations; 248/248 pgTAP assertions passed.
+  - [x] Trusted-backend condition hardened to require both the JWT `service_role` claim
+    and the effective PostgreSQL role; the earlier `session_user`-based bypass was removed.
+  - [x] Deployed and verified remotely (16 local = 16 remote migrations).
+- [ ] **Phase 6: Design system and application shell** (IN PROGRESS)
+  - [x] Semantic design tokens and typography scale (`src/app/globals.css`).
+  - [x] Application shell: sidebar, header, mobile drawer, user menu.
+  - [x] Shared UI primitives (`src/components/ui/`).
+  - [x] Server-side role-based route protection (`src/lib/auth/`), verified against six
+    real local test accounts covering all four roles plus unassigned/inactive states.
+  - [x] Protected route group with placeholder pages for every later module — no
+    fabricated data, no business logic.
+  - [x] Home/login/signup/account/error pages refreshed to the new visual system.
+  - [x] No new database migration created or modified.
+  - [ ] Not marked complete — see `docs/PHASE6_UI_TESTING.md` for what remains a manual
+    checklist item versus what was actually verified.
 - [ ] **Phase 7: Dashboard and KPI implementation**
 - [ ] **Phase 8: Package registration workflow**
 - [ ] **Phase 9: Real-time tracking interface**

@@ -9,17 +9,21 @@ Please refer to the following files for the authoritative rules and project stat
 - [TRACEABILITY_MATRIX.md](./docs/TRACEABILITY_MATRIX.md)
 - [DECISION_LOG.md](./docs/DECISION_LOG.md)
 - [PHASE_PROGRESS.md](./docs/PHASE_PROGRESS.md)
+- [DESIGN_SYSTEM.md](./docs/DESIGN_SYSTEM.md)
+- [PHASE6_UI_TESTING.md](./docs/PHASE6_UI_TESTING.md)
 
 ## Current Stage
-**Phase 5 — RLS and authorization** (IN PROGRESS)
+**Phase 6 — Design system and application shell** (IN PROGRESS)
 
 *Explicit limitations of the current phase:*
-- Phase 3 functions and triggers are implemented.
-- Phase 4 Auth profiles and session foundation are remotely deployed and verified.
-- Phase 5 establishes complete Row-Level Security, removing ambient privileges, creating private authorization helpers, defining explicitly constrained RPCs, and applying granular access controls across all 14 public tables.
-- Current database validation is 239/239 tests passing locally.
-- Phase 6 is NOT STARTED.
-- Remote database deployment of Phase 5 migrations has not yet occurred.
+- Phase 5 (RLS and authorization) is complete: 16 local migrations, 248/248 pgTAP
+  assertions passing, deployed and verified remotely.
+- Phase 6 delivers the design token system, application shell (sidebar/header/mobile
+  drawer), shared UI primitives, server-side role-based route protection, and placeholder
+  pages for every later module — with no business logic, no fabricated data, and no new
+  database migrations.
+- Phase 7 (Dashboard and KPI implementation) is NOT STARTED.
+- No Phase 6 change has been committed, pushed, or deployed to the remote database.
 
 ## Technology Foundation
 - Next.js (App Router)

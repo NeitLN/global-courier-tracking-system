@@ -1,13 +1,99 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — Phase 6.
+ * Light mode is the primary target. Dark values only adjust the base
+ * background/foreground pair (as before Phase 6) and are not a full
+ * dark theme; there is no toggle.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base surfaces */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+
+  /* Brand: navy = primary/trust, amber = attention/highlight */
+  --primary: #0f2a4a;
+  --primary-foreground: #ffffff;
+  --accent: #d97706;
+  --accent-foreground: #ffffff;
+
+  /* Status semantics */
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --success-soft: #dcfce7;
+  --success-soft-foreground: #166534;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fef3c7;
+  --warning-soft-foreground: #92400e;
+  --danger: #b91c1c;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fee2e2;
+  --danger-soft-foreground: #991b1b;
+
+  /* In-network / informational (navy family), used for transit states */
+  --info: #1d4ed8;
+  --info-foreground: #ffffff;
+  --info-soft: #dbeafe;
+  --info-soft-foreground: #1e40af;
+
+  /* Focus ring */
+  --ring: #d97706;
+
+  /* Sidebar surface (navy) */
+  --sidebar: #0f2a4a;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-muted-foreground: #94a3b8;
+  --sidebar-border: #1e3a5f;
+  --sidebar-active: #16304f;
+  --sidebar-active-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-foreground: var(--danger-soft-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-foreground: var(--info-soft-foreground);
+
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -19,8 +105,82 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Typography scale for the protected application shell.
+ * Intentionally restrained — no marketing-sized display type.
+ */
+@layer components {
+  .text-page-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+  }
+
+  .text-section-title {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .text-body {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    color: var(--foreground);
+  }
+
+  .text-label {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  .text-caption {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--muted-foreground);
+  }
+
+  .text-table {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--foreground);
+  }
+
+  .text-kpi-value {
+    font-size: 1.75rem;
+    line-height: 2.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }

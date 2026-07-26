@@ -19,7 +19,10 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/account')
+  // The protected layout's requireRouteAccess() sends anything other than an
+  // active, assigned profile back to /account automatically — this is a
+  // convenience destination for the common case, not a bypass of that check.
+  redirect('/dashboard')
 }
 
 export async function signUp(formData: FormData) {
@@ -60,7 +63,7 @@ export async function signUp(formData: FormData) {
 
   if (signUpData.session) {
     revalidatePath('/', 'layout')
-    redirect('/account')
+    redirect('/dashboard')
   } else {
     redirect('/login?message=' + encodeURIComponent('Please check your email to confirm your account.'))
   }

@@ -1,41 +1,87 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { signOut } from '@/app/auth/actions'
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Clock } from "lucide-react";
+import { getAuthContext } from "@/lib/auth/auth-context";
+import { ROLE_LABELS } from "@/lib/auth/roles";
+import { signOut } from "@/app/auth/actions";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const auth = await getAuthContext();
 
-  if (error || !user) {
-    redirect('/login')
+  if (auth.status === "unauthenticated") {
+    redirect("/login");
   }
 
-  const displayName = user.user_metadata?.display_name || 'N/A'
-
   return (
-    <main className="p-8 font-sans max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Account Dashboard</h1>
-      
-      <div className="bg-white shadow p-6 rounded-lg border mb-6">
-        <h2 className="text-lg font-semibold mb-4">Your Information</h2>
-        <p className="mb-2"><strong>Email:</strong> {user.email}</p>
-        <p className="mb-2"><strong>User ID:</strong> {user.id}</p>
-        <p className="mb-2"><strong>Display Name:</strong> {displayName}</p>
-      </div>
+    <main className="flex min-h-dvh items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Account</CardTitle>
+            <CardDescription>{auth.email}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {auth.status === "no_profile" && (
+              <Alert tone="warning" title="Setting up your account">
+                Your account was created, but a profile record hasn&apos;t finished provisioning yet.
+                Try refreshing this page in a moment, or contact support if this persists.
+              </Alert>
+            )}
 
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <p className="text-sm text-yellow-800">
-          <strong>Notice:</strong> Role and domain access are pending Phase 5 authorization. You currently have no operational privileges.
-        </p>
-      </div>
+            {auth.status === "unassigned" && (
+              <Alert tone="info" title="Waiting for role assignment">
+                Your account is active, but no operational role has been assigned yet. An administrator
+                needs to assign a role before you can access the courier system&apos;s modules.
+              </Alert>
+            )}
 
-      <form action={signOut}>
-        <button className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700" type="submit">
-          Sign Out
-        </button>
-      </form>
+            {auth.status === "inactive" && (
+              <Alert tone="danger" title="Account suspended">
+                Your account has been marked inactive. You can still sign in, but operational access is
+                disabled. Contact an administrator if you believe this is an error.
+              </Alert>
+            )}
+
+            {auth.status === "active" && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Display name:</span>
+                  <span className="text-sm font-medium">{auth.displayName ?? "Not set"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Role:</span>
+                  <Badge tone="primary">{ROLE_LABELS[auth.appRole]}</Badge>
+                </div>
+                <Link
+                  href="/dashboard"
+                  className="focus-ring inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Go to dashboard
+                </Link>
+              </div>
+            )}
+
+            <form action={signOut}>
+              <Button type="submit" variant="outline" size="sm">
+                Sign out
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {auth.status !== "active" && (
+          <p className="flex items-center gap-1.5 text-caption justify-center">
+            <Clock className="size-3.5" aria-hidden="true" />
+            This page updates automatically once your account status changes.
+          </p>
+        )}
+      </div>
     </main>
-  )
+  );
 }
