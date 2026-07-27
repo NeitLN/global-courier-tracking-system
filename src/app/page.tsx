@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Truck } from "lucide-react";
+import { Search, Truck } from "lucide-react";
 import { getAuthContext } from "@/lib/auth/auth-context";
 
 // This page's content genuinely depends on request-time auth state (signed
@@ -38,6 +38,13 @@ export default async function Home() {
         ) : (
           <>
             <Link
+              href="/track"
+              className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-5 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              <Search className="size-4" aria-hidden="true" />
+              Track a package
+            </Link>
+            <Link
               href="/login"
               className="focus-ring inline-flex h-10 items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
@@ -53,7 +60,7 @@ export default async function Home() {
         )}
       </div>
 
-      <p className="text-caption">Phase 6 — Design system and application shell (in progress)</p>
+      <p className="text-caption">Customer tracking and package registration workflows are available.</p>
     </main>
   );
 }

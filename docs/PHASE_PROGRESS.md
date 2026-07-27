@@ -72,15 +72,41 @@ Current phase execution for the Global Courier & Tracking System project.
     collides across roles. Fixed in `src/lib/navigation/nav-config.ts` with a full-path
     override map. See `docs/PHASE6_UI_TESTING.md` for the fuller testing record from the
     prior pass this review builds on.
-- [ ] **Phase 7: Dashboard and KPI implementation**
-- [ ] **Phase 8: Package registration workflow**
-- [ ] **Phase 9: Real-time tracking interface**
-- [ ] **Phase 10: Dispatch and routing management**
-- [ ] **Phase 11: Trip and leg assignments**
-- [ ] **Phase 12: Scan recording and checkpoint workflows**
-- [ ] **Phase 13: Customer management interface**
-- [ ] **Phase 14: Hub inventory and transit analytics**
-- [ ] **Phase 15: Driver performance reporting**
-- [ ] **Phase 16: SLA compliance tracking**
-- [ ] **Phase 17: Multi-hop route planning UI**
-- [ ] **Phase 18: Final review and system hardening**
+- [ ] **Phase 7: Public Tracking and Customer Module** (IMPLEMENTED — VALIDATION PENDING)
+  - [x] Public `/track` route backed by `fn_public_track_package` with public-safe output only.
+  - [x] Customer dashboard uses `fn_customer_dashboard_summary`; RPC failures never become fake zero KPIs.
+  - [x] `/shipments` lists only RLS-visible packages with tracking, status and service filters.
+  - [x] `/shipments/[trackingNo]` shows overview, F6 chain of custody, inter-scan intervals,
+    and real trip-leg/delivery-attempt sections only when rows exist.
+  - [x] `/profile` separates application display-name updates (`fn_update_display_name`) from
+    CUSTOMER domain updates (`fn_update_customer`). The approved CUSTOMER schema has no address
+    column, so no address field was invented.
+  - [x] Public tracking output excludes sender/receiver IDs, contact data, full addresses, staff IDs,
+    driver data and internal remarks.
+  - [ ] Runtime exit gate pending: apply migration 17 and run the complete RLS/public-tracking tests.
+- [ ] **Phase 8: Package Registration and Shipment Management** (IMPLEMENTED — VALIDATION PENDING)
+  - [x] `/shipments/new` loads real service types and hubs and submits through a Server Action.
+  - [x] Privacy-preserving `fn_register_package_by_receiver_email` resolves an exact receiver email
+    inside PostgreSQL and delegates to the existing atomic `fn_register_package` transaction.
+  - [x] Tracking number and fee remain database-generated; no fee formula or estimate exists in UI.
+  - [x] Registration result links directly to shipment detail and confirms the returned tracking
+    number, database fee and initial REGISTERED event.
+  - [x] New migration: `20260727100000_create_customer_tracking_and_registration_support.sql`.
+  - [x] New pgTAP file: `022_customer_tracking_and_registration_support.test.sql` (13 assertions).
+  - [x] Static TypeScript parse (`tsc --noCheck --noEmit`) and `git diff --check` pass.
+  - [ ] Full `npm run check` pending because package installation was unavailable in this sandbox
+    (internal registry HTTP 503; public registry DNS EAI_AGAIN).
+  - [ ] pgTAP execution pending because this sandbox has no Docker, Supabase CLI installation or
+    PostgreSQL binaries. Previously verified baseline remains 248/248; the 13 new assertions are
+    added but not claimed as passing yet.
+  - [ ] Migration remains local only; no commit, push or remote database command was performed.
+- [ ] **Phase 9: Hub Operator Module**
+- [ ] **Phase 10: Dispatcher Control Center**
+- [ ] **Phase 11: Analyst Dashboard and F7–F10**
+- [ ] **Phase 12: Integrated Role Dashboards**
+- [ ] **Phase 13: Error Handling, Audit and Observability**
+- [ ] **Phase 14: Full Testing and Security QA**
+- [ ] **Phase 15: Deployment**
+- [ ] **Phase 16: Final Report Update**
+- [ ] **Phase 17: Presentation and Demo Script**
+- [ ] **Phase 18: Final Demo Readiness**

@@ -87,3 +87,17 @@ Functions currently use `SECURITY INVOKER`. Broad execution privileges and RLS e
 - F9 includes zero-attempt drivers through a LEFT JOIN.
 - F10 is bounded graph reachability, not AI optimization or a guaranteed globally optimal route.
 - R7 implementation triggers enforce row-level append-only behavior. TRUNCATE does not fire row-level UPDATE/DELETE triggers. A sufficiently privileged owner can disable triggers. Phase 5 privileges and RLS will reduce application-level access; Phase 3 does not claim protection against malicious database owners or superusers.
+
+## 8. Phase 7–8 Application Support RPCs
+
+Migration `20260727100000_create_customer_tracking_and_registration_support.sql` adds three narrow
+application adapters without changing the approved F1–F10 definitions:
+
+| Function | Security | Purpose |
+| :--- | :--- | :--- |
+| `fn_public_track_package` | DEFINER; anon-safe output | Public F2 projection without PII or internal staff identifiers. |
+| `fn_register_package_by_receiver_email` | DEFINER; CUSTOMER-only | Resolves an exact receiver email inside PostgreSQL and delegates to F1 `fn_register_package`. |
+| `fn_customer_dashboard_summary` | INVOKER; CUSTOMER/RLS-scoped | Returns real active/delivered/returned counts and latest event time. |
+
+These are application-facing safety adapters. They do not add domain relations, statuses, fee rules or
+new business functions beyond F1, F2, F5 and F6.
