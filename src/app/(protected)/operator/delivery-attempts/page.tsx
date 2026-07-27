@@ -1,20 +1,205 @@
 import { PackageX } from "lucide-react";
 import { requireRouteAccess } from "@/lib/auth/route-access";
+import { createClient } from "@/lib/supabase/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
+import { formatDateTime } from "@/lib/courier/format";
+import { DeliveryAttemptForm } from "./DeliveryAttemptForm";
+
+export const dynamic = "force-dynamic";
+
+interface DriverRow {
+  driver_id: number;
+  full_name: string;
+  license_no: string;
+}
+
+interface AttemptRow {
+  delivery_attempt_id: number;
+  attempt_time: string;
+  outcome: string;
+  failure_reason: string | null;
+  notes: string | null;
+  package: { tracking_no: string };
+  driver: { full_name: string; license_no: string };
+}
 
 export default async function OperatorDeliveryAttemptsPage() {
-  await requireRouteAccess(["HUB_OPERATOR"]);
+  const auth = await requireRouteAccess(["HUB_OPERATOR"]);
+  const staffId = auth.staffId;
+
+  if (!staffId) {
+    return (
+      <PageContainer>
+        <PageHeader title="Delivery Attempts" description="Recorded delivery outcomes for your hub's drivers." />
+        <Alert tone="danger" title="Account Mismatch">
+          Your active profile is assigned as a Hub Operator, but is not linked to any row in the <code>staff</code> table.
+        </Alert>
+      </PageContainer>
+    );
+  }
+
+  const supabase = await createClient();
+
+  // 1. Fetch staff details and transit hub
+  const { data: staff, error: staffError } = await supabase
+    .from("staff")
+    .select(`
+      full_name,
+      hub_id,
+      transit_hub (
+        hub_code,
+        hub_name
+      )
+    `)
+    .eq("staff_id", staffId)
+    .single();
+
+  if (staffError || !staff) {
+    return (
+      <PageContainer>
+        <PageHeader title="Delivery Attempts" description="Recorded delivery outcomes for your hub's drivers." />
+        <Alert tone="danger" title="Staff Data Error">
+          Could not retrieve your staff record or assigned hub details from the database.
+        </Alert>
+      </PageContainer>
+    );
+  }
+
+  const hubId = staff.hub_id;
+  const hubRelation = staff.transit_hub as unknown as { hub_code: string; hub_name: string }[] | { hub_code: string; hub_name: string } | null;
+  const hub = Array.isArray(hubRelation) ? hubRelation[0] : hubRelation;
+
+  // 2. Fetch drivers based at this hub
+  const { data: drivers, error: driversError } = await supabase
+    .from("driver")
+    .select("driver_id, full_name, license_no")
+    .eq("base_hub_id", hubId)
+    .order("full_name");
+
+  if (driversError) {
+    return (
+      <PageContainer>
+        <PageHeader title="Delivery Attempts" description="Recorded delivery outcomes for your hub's drivers." />
+        <Alert tone="danger" title="Database Error">
+          Could not load the drivers for your hub: {driversError.message}
+        </Alert>
+      </PageContainer>
+    );
+  }
+
+  // 3. Fetch previous delivery attempts for drivers at this hub
+  const { data: attempts, error: attemptsError } = await supabase
+    .from("delivery_attempt")
+    .select(`
+      delivery_attempt_id,
+      attempt_time,
+      outcome,
+      failure_reason,
+      notes,
+      package!inner ( tracking_no ),
+      driver!inner ( full_name, license_no, base_hub_id )
+    `)
+    .eq("driver.base_hub_id", hubId)
+    .order("attempt_time", { ascending: false })
+    .limit(50);
+
+  const typedDrivers = (drivers || []) as DriverRow[];
+  const typedAttempts = (attempts || []) as unknown as AttemptRow[];
 
   return (
     <PageContainer>
-      <PageHeader title="Delivery Attempts" description="Recorded delivery outcomes for your hub's drivers." />
-      <EmptyState
-        icon={PackageX}
-        title="Delivery attempt recording arrives in Phase 12"
-        description="Failed and successful delivery attempts will appear here once checkpoint and delivery workflows are implemented."
+      <PageHeader
+        title="Delivery Attempts"
+        description="Record and view delivery outcomes for your hub's drivers. Constraints, transactional rules, and failure reasons are validated directly by PostgreSQL."
       />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left column: Form */}
+        <div className="lg:col-span-1">
+          {typedDrivers.length === 0 ? (
+            <Alert tone="warning" title="No drivers available">
+              No drivers are currently assigned to your hub ({hub?.hub_name}). You cannot record delivery attempts until drivers are assigned to this hub.
+            </Alert>
+          ) : (
+            <DeliveryAttemptForm
+              drivers={typedDrivers}
+              hubCode={hub?.hub_code || "UNK"}
+              hubName={hub?.hub_name || "Unknown Hub"}
+            />
+          )}
+        </div>
+
+        {/* Right column: List of previous attempts */}
+        <div className="lg:col-span-2 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Attempts at Your Hub</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attemptsError && (
+                <Alert tone="danger" title="Could not load attempts">
+                  {attemptsError.message}
+                </Alert>
+              )}
+
+              {!attemptsError && typedAttempts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                  <PackageX className="size-12 text-muted-foreground/30 mb-3" />
+                  <p className="text-sm font-semibold">No delivery attempts recorded yet</p>
+                  <p className="text-xs mt-1">Use the form to record the first outcome.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border bg-card">
+                  <table className="w-full border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50 font-medium text-muted-foreground">
+                        <th className="p-3">Package</th>
+                        <th className="p-3">Driver</th>
+                        <th className="p-3">Outcome</th>
+                        <th className="p-3">Attempt Time</th>
+                        <th className="p-3">Details / Reasons</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {typedAttempts.map((attempt) => (
+                        <tr key={attempt.delivery_attempt_id} className="hover:bg-muted/20">
+                          <td className="p-3 font-mono font-medium text-foreground">
+                            {attempt.package?.tracking_no}
+                          </td>
+                          <td className="p-3">
+                            <div className="font-medium text-foreground">{attempt.driver?.full_name}</div>
+                            <div className="text-xs text-muted-foreground">{attempt.driver?.license_no}</div>
+                          </td>
+                          <td className="p-3">
+                            <Badge tone={attempt.outcome === "SUCCESS" ? "success" : "danger"}>
+                              {attempt.outcome}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-muted-foreground">
+                            {formatDateTime(attempt.attempt_time)}
+                          </td>
+                          <td className="p-3 text-xs text-muted-foreground max-w-xs truncate">
+                            {attempt.outcome === "FAILED" && (
+                              <p className="font-semibold text-danger-foreground">
+                                Reason: {attempt.failure_reason}
+                              </p>
+                            )}
+                            {attempt.notes && <p className="italic">Note: {attempt.notes}</p>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </PageContainer>
   );
 }
