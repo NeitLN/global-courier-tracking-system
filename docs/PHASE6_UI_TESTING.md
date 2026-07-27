@@ -130,3 +130,36 @@ Screenshots from this testing pass exist only in this session's local scratch di
 not committed to the repository (they were a debugging/verification aid, not a deliverable
 artifact). If a permanent visual record is wanted, that should be a deliberate follow-up
 (e.g., Storybook or committed reference screenshots), not assumed to already exist here.
+
+## Addendum: Close-out review pass (this session)
+
+This was a code review and validation pass per the roadmap's §6.1 checklist, not a
+rebuild — no browser/E2E framework or local Supabase instance was available in this
+review environment (no Docker), so the live six-account role-matrix testing above was
+**not** re-run here; it's taken as still valid from the prior pass.
+
+What this pass actually did:
+- Full diff against the committed `HEAD` (byte-for-byte, ignoring line-ending noise from
+  the working copy) to confirm no migration and no unrelated file had drifted.
+- `npm run lint`, `npm run typecheck`, and `npm run build` all re-run and passing. (Build
+  in this specific sandbox needed a temporary, reverted stub for the `next/font/google`
+  import because this sandbox's network egress blocks `fonts.googleapis.com` — confirmed
+  as a sandbox-only limitation, not an app defect, by restoring the file byte-identical
+  afterward and diffing to prove it.)
+- Static/code review of every protected page's `requireRouteAccess` call against
+  `nav-config.ts` to confirm role↔route↔menu consistency.
+- Grepped `src/` for fake/mock data patterns and for hardcoded secrets or service-role
+  key usage — none found.
+- Smoke-tested the public/unauthenticated flows (`/`, `/login`, `/signup`, `/unauthorized`,
+  `/dashboard` redirect-when-signed-out, a 404 route) against a real `next start`
+  production server in this sandbox, pointed at a placeholder (unreachable) Supabase URL —
+  this exercises routing, the proxy/middleware, and page rendering, but **not**
+  authenticated flows, since there was no reachable Supabase instance to sign in against.
+
+One real bug found and fixed: see the Phase 6 entry in `docs/PHASE_PROGRESS.md` for the
+breadcrumb label collision on `/analytics/routes` and `/analytics/drivers`.
+
+Authenticated-flow regression testing (the six-role matrix) against this exact fix should
+still be spot-checked once against a real local Supabase instance before this is
+considered fully re-verified end to end — the fix itself is a pure label-lookup change
+with no auth surface, so the risk is low, but it was not re-exercised live here.

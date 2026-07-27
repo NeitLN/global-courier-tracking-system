@@ -108,6 +108,19 @@ const SEGMENT_LABELS: Record<string, string> = {
   unauthorized: "Unauthorized",
 };
 
+/**
+ * A handful of route segments (`routes`, `drivers`) are reused by more than
+ * one role's section with a different meaning in each — e.g. the Dispatcher
+ * "Routes" list vs. the Analyst "Route Explorer". `SEGMENT_LABELS` can only
+ * hold one label per segment, so those specific full paths are overridden
+ * here to match the label actually shown for them in the sidebar
+ * (`NAV_BY_ROLE` above). Checked before the generic per-segment fallback.
+ */
+const PATH_LABEL_OVERRIDES: Record<string, string> = {
+  "/analytics/routes": "Route Explorer",
+  "/analytics/drivers": "Driver Performance",
+};
+
 function labelForSegment(segment: string): string {
   return SEGMENT_LABELS[segment] ?? segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -118,6 +131,6 @@ export function buildBreadcrumbs(pathname: string): BreadcrumbItem[] {
   let href = "";
   return segments.map((segment) => {
     href += `/${segment}`;
-    return { label: labelForSegment(segment), href };
+    return { label: PATH_LABEL_OVERRIDES[href] ?? labelForSegment(segment), href };
   });
 }

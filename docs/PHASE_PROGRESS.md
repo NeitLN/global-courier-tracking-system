@@ -51,7 +51,7 @@ Current phase execution for the Global Courier & Tracking System project.
   - [x] Trusted-backend condition hardened to require both the JWT `service_role` claim
     and the effective PostgreSQL role; the earlier `session_user`-based bypass was removed.
   - [x] Deployed and verified remotely (16 local = 16 remote migrations).
-- [ ] **Phase 6: Design system and application shell** (IN PROGRESS)
+- [x] **Phase 6: Design system and application shell** (COMPLETE)
   - [x] Semantic design tokens and typography scale (`src/app/globals.css`).
   - [x] Application shell: sidebar, header, mobile drawer, user menu.
   - [x] Shared UI primitives (`src/components/ui/`).
@@ -61,8 +61,17 @@ Current phase execution for the Global Courier & Tracking System project.
     fabricated data, no business logic.
   - [x] Home/login/signup/account/error pages refreshed to the new visual system.
   - [x] No new database migration created or modified.
-  - [ ] Not marked complete — see `docs/PHASE6_UI_TESTING.md` for what remains a manual
-    checklist item versus what was actually verified.
+  - [x] Close-out review (roadmap §6.1 checklist): `npm run lint` / `typecheck` / `build`
+    pass; no migration modified; role→nav mapping and route guards checked page-by-page;
+    mobile drawer opens/closes and traps focus correctly; no fake data or secrets in
+    `src/`; login/signup/logout/account-state flows smoke-tested against a production
+    build. One real bug found and fixed: breadcrumbs for `/analytics/routes` and
+    `/analytics/drivers` rendered the Dispatcher-context labels ("Routes"/"Drivers")
+    instead of the sidebar's actual Analyst-context labels ("Route Explorer"/"Driver
+    Performance"), because label lookup was keyed on the last URL segment only, which
+    collides across roles. Fixed in `src/lib/navigation/nav-config.ts` with a full-path
+    override map. See `docs/PHASE6_UI_TESTING.md` for the fuller testing record from the
+    prior pass this review builds on.
 - [ ] **Phase 7: Dashboard and KPI implementation**
 - [ ] **Phase 8: Package registration workflow**
 - [ ] **Phase 9: Real-time tracking interface**
