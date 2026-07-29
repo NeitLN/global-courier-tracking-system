@@ -5,8 +5,13 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export async function signIn(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const email = String(formData.get('email') ?? '').trim()
+  const password = String(formData.get('password') ?? '')
+
+  if (!email || !password) {
+    redirect('/auth/error?message=' + encodeURIComponent('Email and password are required.'))
+  }
+
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -26,11 +31,11 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const displayName = formData.get('display_name') as string
+  const email = String(formData.get('email') ?? '').trim()
+  const password = String(formData.get('password') ?? '')
+  const displayName = String(formData.get('display_name') ?? '').trim()
   
-  if (displayName && displayName.trim() === '') {
+  if (!displayName) {
     redirect('/auth/error?message=' + encodeURIComponent('Display name cannot be blank.'))
   }
   if (!email || !email.includes('@')) {
