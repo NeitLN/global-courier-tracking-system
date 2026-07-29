@@ -27,6 +27,17 @@ interface AttemptRow {
   driver: { full_name: string; license_no: string };
 }
 
+interface HubDeliveryAttemptRow {
+  delivery_attempt_id: number;
+  attempt_time: string;
+  outcome: string;
+  failure_reason: string | null;
+  notes: string | null;
+  tracking_no: string;
+  driver_name: string;
+  driver_license: string;
+}
+
 export default async function OperatorDeliveryAttemptsPage() {
   const auth = await requireRouteAccess(["HUB_OPERATOR"]);
   const staffId = auth.staffId;
@@ -96,7 +107,7 @@ export default async function OperatorDeliveryAttemptsPage() {
   });
 
   const typedDrivers = (drivers || []) as DriverRow[];
-  const typedAttempts = ((attempts || []) as any[]).map((att) => ({
+  const typedAttempts = ((attempts || []) as HubDeliveryAttemptRow[]).map((att) => ({
     delivery_attempt_id: Number(att.delivery_attempt_id),
     attempt_time: att.attempt_time,
     outcome: att.outcome,

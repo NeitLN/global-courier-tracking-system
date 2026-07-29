@@ -22,7 +22,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: { par
   const { created } = await searchParams;
   const supabase = await createClient();
 
-  const shipmentResponse = await supabase.from("package").select("package_id, tracking_no, sender_id, receiver_id, service_id, weight_kg, length_cm, width_cm, height_cm, shipping_fee, origin_hub_id, dest_hub_id, current_status").eq("tracking_no", trackingNo).maybeSingle();
+  const shipmentResponse = await supabase.from("package").select("package_id, tracking_no, sender_id, receiver_id, service_id, weight_kg, length_cm, width_cm, height_cm, shipping_fee, origin_hub_id, dest_hub_id, current_status").eq("tracking_no", trackingNo.toUpperCase()).maybeSingle();
   if (shipmentResponse.error) throw new Error("Shipment query failed");
   if (!shipmentResponse.data) notFound();
   const shipment = shipmentResponse.data as Shipment;
