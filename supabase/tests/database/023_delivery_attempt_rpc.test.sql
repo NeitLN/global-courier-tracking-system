@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(10);
+SELECT plan(13);
 
 -- 1. Setup reference and domain data
 INSERT INTO public.transit_hub (hub_code, hub_name) VALUES ('P9-H1', 'Phase 9 Hub 1');
@@ -146,6 +146,30 @@ SELECT throws_ok(
   NULL,
   'Cannot update tracking events as they are append-only'
 );
+
+-- Test 11: Active HUB_OPERATOR can call fn_get_hub_drivers for their assigned hub
+RESET ROLE;
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', '99999999-9999-9999-9999-999999999999', 'role', 'authenticated')::text, true);
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(format(
+  'SELECT * FROM public.fn_get_hub_drivers(%s)',
+  (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1')
+), 'Hub Operator can retrieve drivers for their own hub');
+
+-- Test 12: HUB_OPERATOR cannot call fn_get_hub_drivers for a different hub
+SELECT throws_ok(
+  'SELECT * FROM public.fn_get_hub_drivers(999999)',
+  NULL,
+  'Unauthorized: cannot view drivers for another hub',
+  'Hub Operator cannot retrieve drivers for another hub'
+);
+
+-- Test 13: Active HUB_OPERATOR can call fn_get_hub_delivery_attempts for their assigned hub
+SELECT lives_ok(format(
+  'SELECT * FROM public.fn_get_hub_delivery_attempts(%s)',
+  (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1')
+), 'Hub Operator can retrieve delivery attempts for their own hub');
 
 SELECT * FROM finish();
 ROLLBACK;

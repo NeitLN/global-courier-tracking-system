@@ -73,12 +73,10 @@ export default async function OperatorDeliveryAttemptsPage() {
   const hubRelation = staff.transit_hub as unknown as { hub_code: string; hub_name: string }[] | { hub_code: string; hub_name: string } | null;
   const hub = Array.isArray(hubRelation) ? hubRelation[0] : hubRelation;
 
-  // 2. Fetch drivers based at this hub
-  const { data: drivers, error: driversError } = await supabase
-    .from("driver")
-    .select("driver_id, full_name, license_no")
-    .eq("base_hub_id", hubId)
-    .order("full_name");
+  // 2. Fetch drivers based at this hub via RPC (direct SELECT on PII table "driver" is restricted under security policies)
+  const { data: drivers, error: driversError } = await supabase.rpc("fn_get_hub_drivers", {
+    p_hub_id: hubId,
+  });
 
   if (driversError) {
     return (
@@ -91,24 +89,22 @@ export default async function OperatorDeliveryAttemptsPage() {
     );
   }
 
-  // 3. Fetch previous delivery attempts for drivers at this hub
-  const { data: attempts, error: attemptsError } = await supabase
-    .from("delivery_attempt")
-    .select(`
-      delivery_attempt_id,
-      attempt_time,
-      outcome,
-      failure_reason,
-      notes,
-      package!inner ( tracking_no ),
-      driver!inner ( full_name, license_no, base_hub_id )
-    `)
-    .eq("driver.base_hub_id", hubId)
-    .order("attempt_time", { ascending: false })
-    .limit(50);
+  // 3. Fetch previous delivery attempts for drivers at this hub via RPC (direct SELECT/JOIN on "driver" is restricted under security policies)
+  const { data: attempts, error: attemptsError } = await supabase.rpc("fn_get_hub_delivery_attempts", {
+    p_hub_id: hubId,
+    p_limit: 50,
+  });
 
   const typedDrivers = (drivers || []) as DriverRow[];
-  const typedAttempts = (attempts || []) as unknown as AttemptRow[];
+  const typedAttempts = ((attempts || []) as any[]).map((att) => ({
+    delivery_attempt_id: Number(att.delivery_attempt_id),
+    attempt_time: att.attempt_time,
+    outcome: att.outcome,
+    failure_reason: att.failure_reason,
+    notes: att.notes,
+    package: { tracking_no: att.tracking_no },
+    driver: { full_name: att.driver_name, license_no: att.driver_license },
+  })) as AttemptRow[];
 
   return (
     <PageContainer>

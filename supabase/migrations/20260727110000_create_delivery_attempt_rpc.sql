@@ -1,6 +1,10 @@
 -- MIGRATION: create_delivery_attempt_rpc
--- Description: Adds fn_record_delivery_attempt write RPC for Hub Operators.
+-- Description: Adds fn_record_delivery_attempt write RPC, fn_get_hub_drivers, and fn_get_hub_delivery_attempts read RPCs for Hub Operators.
 
+-- 1. Ensure public.delivery_attempt has the notes column
+ALTER TABLE public.delivery_attempt ADD COLUMN IF NOT EXISTS notes text;
+
+-- 2. Create the delivery attempt recording RPC
 CREATE OR REPLACE FUNCTION public.fn_record_delivery_attempt(
     p_tracking_number text,
     p_driver_id bigint,
@@ -101,3 +105,122 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.fn_record_delivery_attempt(text, bigint, timestamptz, text, text, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.fn_record_delivery_attempt(text, bigint, timestamptz, text, text, text) TO authenticated, service_role;
+
+
+-- 3. Create fn_get_hub_drivers (SECURITY DEFINER read RPC)
+CREATE OR REPLACE FUNCTION public.fn_get_hub_drivers(
+    p_hub_id bigint
+)
+RETURNS TABLE (
+    driver_id bigint,
+    full_name text,
+    license_no text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = ''
+AS $$
+DECLARE
+    v_is_trusted_backend boolean;
+    v_role text;
+BEGIN
+    v_is_trusted_backend := (
+        auth.role() = 'service_role'
+        AND current_setting('role', true) = 'service_role'
+    );
+
+    IF NOT v_is_trusted_backend THEN
+        IF auth.uid() IS NULL THEN
+            RAISE EXCEPTION 'Not authenticated';
+        END IF;
+        IF NOT authz_private.is_active_user() THEN
+            RAISE EXCEPTION 'User profile is not active';
+        END IF;
+        v_role := COALESCE(authz_private.current_app_role(), '');
+        IF v_role NOT IN ('HUB_OPERATOR', 'DISPATCHER') THEN
+            RAISE EXCEPTION 'Unauthorized: must be HUB_OPERATOR or DISPATCHER';
+        END IF;
+        IF v_role = 'HUB_OPERATOR' AND p_hub_id <> authz_private.current_staff_hub() THEN
+            RAISE EXCEPTION 'Unauthorized: cannot view drivers for another hub';
+        END IF;
+    END IF;
+
+    RETURN QUERY
+    SELECT d.driver_id, d.full_name, d.license_no
+    FROM public.driver d
+    WHERE d.base_hub_id = p_hub_id
+    ORDER BY d.full_name;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.fn_get_hub_drivers(bigint) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.fn_get_hub_drivers(bigint) TO authenticated, service_role;
+
+
+-- 4. Create fn_get_hub_delivery_attempts (SECURITY DEFINER read RPC)
+CREATE OR REPLACE FUNCTION public.fn_get_hub_delivery_attempts(
+    p_hub_id bigint,
+    p_limit integer DEFAULT 50
+)
+RETURNS TABLE (
+    delivery_attempt_id bigint,
+    attempt_time timestamptz,
+    outcome text,
+    failure_reason text,
+    notes text,
+    tracking_no text,
+    driver_name text,
+    driver_license text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+SET search_path = ''
+AS $$
+DECLARE
+    v_is_trusted_backend boolean;
+    v_role text;
+BEGIN
+    v_is_trusted_backend := (
+        auth.role() = 'service_role'
+        AND current_setting('role', true) = 'service_role'
+    );
+
+    IF NOT v_is_trusted_backend THEN
+        IF auth.uid() IS NULL THEN
+            RAISE EXCEPTION 'Not authenticated';
+        END IF;
+        IF NOT authz_private.is_active_user() THEN
+            RAISE EXCEPTION 'User profile is not active';
+        END IF;
+        v_role := COALESCE(authz_private.current_app_role(), '');
+        IF v_role NOT IN ('HUB_OPERATOR', 'DISPATCHER') THEN
+            RAISE EXCEPTION 'Unauthorized: must be HUB_OPERATOR or DISPATCHER';
+        END IF;
+        IF v_role = 'HUB_OPERATOR' AND p_hub_id <> authz_private.current_staff_hub() THEN
+            RAISE EXCEPTION 'Unauthorized: cannot view delivery attempts for another hub';
+        END IF;
+    END IF;
+
+    RETURN QUERY
+    SELECT 
+        da.attempt_id AS delivery_attempt_id,
+        da.attempt_time,
+        da.outcome,
+        da.failure_reason,
+        da.notes,
+        p.tracking_no,
+        d.full_name AS driver_name,
+        d.license_no AS driver_license
+    FROM public.delivery_attempt da
+    JOIN public.package p ON da.package_id = p.package_id
+    JOIN public.driver d ON da.driver_id = d.driver_id
+    WHERE d.base_hub_id = p_hub_id
+    ORDER BY da.attempt_time DESC
+    LIMIT p_limit;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.fn_get_hub_delivery_attempts(bigint, integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.fn_get_hub_delivery_attempts(bigint, integer) TO authenticated, service_role;
