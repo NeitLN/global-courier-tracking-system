@@ -14,20 +14,26 @@ INSERT INTO public.staff (full_name, hub_id) VALUES
 INSERT INTO public.driver (full_name, license_no, phone, base_hub_id) VALUES
   ('Phase 9 Driver', 'P9-LIC001', 'P9-PH001', (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'));
 
-INSERT INTO public.package (tracking_no, sender_id, receiver_id, service_id, origin_hub_id, dest_hub_id, weight_kg, shipping_fee) VALUES
+INSERT INTO public.package (tracking_no, sender_id, receiver_id, service_id, origin_hub_id, dest_hub_id, weight_kg, shipping_fee, current_status) VALUES
   ('P9-TRACK001',
    (SELECT customer_id FROM public.customer WHERE email = 'p9-sender@example.com'),
    (SELECT customer_id FROM public.customer WHERE email = 'p9-receiver@example.com'),
    (SELECT service_id FROM public.service_type WHERE service_name = 'Phase 9 Service'),
    (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'),
    (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'),
-   5, 30.00);
+   5, 30.00, 'REGISTERED');
 
--- Insert initial REGISTERED and OUT_FOR_DELIVERY events to set up package status
+-- Insert initial REGISTERED, PICKED_UP, IN_TRANSIT, and OUT_FOR_DELIVERY events to set up package status
 INSERT INTO public.tracking_event (package_id, hub_id, status_code, event_time, recorded_by) VALUES
   ((SELECT package_id FROM public.package WHERE tracking_no = 'P9-TRACK001'),
    (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'),
    'REGISTERED', now() - interval '2 hours', NULL),
+  ((SELECT package_id FROM public.package WHERE tracking_no = 'P9-TRACK001'),
+   (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'),
+   'PICKED_UP', now() - interval '1 hour 45 minutes', (SELECT staff_id FROM public.staff WHERE full_name = 'Phase 9 Operator')),
+  ((SELECT package_id FROM public.package WHERE tracking_no = 'P9-TRACK001'),
+   (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'),
+   'IN_TRANSIT', now() - interval '1 hour 30 minutes', (SELECT staff_id FROM public.staff WHERE full_name = 'Phase 9 Operator')),
   ((SELECT package_id FROM public.package WHERE tracking_no = 'P9-TRACK001'),
    (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1'),
    'OUT_FOR_DELIVERY', now() - interval '1 hour', (SELECT staff_id FROM public.staff WHERE full_name = 'Phase 9 Operator'));
@@ -54,6 +60,8 @@ SELECT lives_ok(format(
   'Left a delivery attempt notice card.'
 ), 'Hub Operator can record a failed delivery attempt with failure reason');
 
+RESET ROLE;
+
 -- Test 2: Verify the failed delivery attempt exists
 SELECT is((
   SELECT count(*)::int
@@ -61,6 +69,8 @@ SELECT is((
   JOIN public.package p ON da.package_id = p.package_id
   WHERE p.tracking_no = 'P9-TRACK001' AND da.outcome = 'FAILED'
 ), 1, 'Failed delivery attempt was inserted correctly');
+
+SET LOCAL ROLE authenticated;
 
 -- Test 3: Failed attempt without failure reason should fail
 SELECT throws_ok(format(
@@ -90,6 +100,8 @@ SELECT lives_ok(format(
   'SUCCESS',
   'Delivered to front door.'
 ), 'Hub Operator can record a successful delivery attempt with null failure reason');
+
+RESET ROLE;
 
 -- Test 6: Verify successful delivery attempt exists
 SELECT is((
