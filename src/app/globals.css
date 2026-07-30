@@ -2,9 +2,11 @@
 
 /*
  * Design tokens — Phase 6.
- * Light mode is the primary target. Dark values only adjust the base
- * background/foreground pair (as before Phase 6) and are not a full
- * dark theme; there is no toggle.
+ * Light mode only; there is no dark theme or toggle. An OS-level
+ * prefers-color-scheme override was tried here but only flipped
+ * --background/--foreground, not --card/--card-foreground, which made
+ * text unreadable inside cards (always white) for anyone with OS dark
+ * mode on — removed rather than half-implemented.
  */
 :root {
   /* Base surfaces */
@@ -96,13 +98,6 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -11,6 +11,7 @@ import { SelectField } from "@/components/ui/SelectField";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatDateTime } from "@/lib/courier/format";
+import { courierErrorMessage } from "@/lib/courier/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -104,7 +105,7 @@ export default async function OperatorInventoryPage({
       <PageContainer>
         <PageHeader title="Current Inventory" description="Packages currently held at your hub." />
         <Alert tone="danger" title="Database Error">
-          {rpcError.message}
+          {courierErrorMessage(rpcError.message, "OPERATOR_HUB_INVENTORY", auth.userId)}
         </Alert>
       </PageContainer>
     );

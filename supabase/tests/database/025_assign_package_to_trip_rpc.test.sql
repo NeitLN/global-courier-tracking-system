@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(26);
+SELECT plan(27);
 
 -- 1. Setup isolated reference and domain data for Phase 10A2
 INSERT INTO public.transit_hub (hub_code, hub_name) VALUES 
@@ -22,6 +22,13 @@ INSERT INTO public.trip (route_id, vehicle_id, driver_id, depart) VALUES
    (SELECT vehicle_id FROM public.vehicle WHERE plate_no = 'PH10A2-PL'),
    (SELECT driver_id FROM public.driver WHERE license_no = 'PH10A2-LIC'),
    '2026-08-05 10:00:00+00'::timestamptz);
+
+-- A second trip on the same route, used to test cross-trip double-booking rejection
+INSERT INTO public.trip (route_id, vehicle_id, driver_id, depart) VALUES
+  ((SELECT route_id FROM public.route WHERE origin_hub_id = (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'PH10-A2-H1')),
+   (SELECT vehicle_id FROM public.vehicle WHERE plate_no = 'PH10A2-PL'),
+   (SELECT driver_id FROM public.driver WHERE license_no = 'PH10A2-LIC'),
+   '2026-08-05 14:00:00+00'::timestamptz);
 
 -- Setup package context (Sender and Receiver customers)
 INSERT INTO public.customer (full_name, phone, email) VALUES
@@ -76,7 +83,8 @@ INSERT INTO public.tracking_event (package_id, hub_id, status_code, event_time, 
    'REGISTERED', '2026-08-05 08:00:00+00'::timestamptz, NULL);
 
 -- Save GUC variables for test isolation
-SELECT set_config('test.p10_trip_id', (SELECT trip_id::text FROM public.trip WHERE route_id = (SELECT route_id FROM public.route WHERE origin_hub_id = (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'PH10-A2-H1'))), true);
+SELECT set_config('test.p10_trip_id', (SELECT trip_id::text FROM public.trip WHERE depart = '2026-08-05 10:00:00+00'::timestamptz), true);
+SELECT set_config('test.p10_trip2_id', (SELECT trip_id::text FROM public.trip WHERE depart = '2026-08-05 14:00:00+00'::timestamptz), true);
 SELECT set_config('test.p10_pkg_1_id', (SELECT package_id::text FROM public.package WHERE tracking_no = 'P10A2-TRK001'), true);
 SELECT set_config('test.p10_pkg_2_id', (SELECT package_id::text FROM public.package WHERE tracking_no = 'P10A2-TRK002'), true);
 SELECT set_config('test.p10_pkg_3_id', (SELECT package_id::text FROM public.package WHERE tracking_no = 'P10A2-TRK003'), true);
@@ -211,6 +219,18 @@ SELECT throws_ok(
     NULL,
     NULL,
     'Re-assignment of duplicate package is rejected'
+);
+
+-- Assertion 10b: Assigning a package that already has an active leg on a DIFFERENT
+-- trip is rejected (package 1 already has an active leg on trip 1 from Assertion 8).
+SELECT throws_ok(
+    $$ SELECT public.fn_assign_package_to_trip(
+        current_setting('test.p10_trip2_id')::bigint,
+        current_setting('test.p10_pkg_1_id')::bigint
+    ) $$,
+    NULL,
+    NULL,
+    'Assigning a package already active on another trip is rejected'
 );
 
 -- Assertion 11: Invalid trip ID is rejected

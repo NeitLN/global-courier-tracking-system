@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SelectField } from "@/components/ui/SelectField";
 import { Button } from "@/components/ui/Button";
+import { courierErrorMessage } from "@/lib/courier/errors";
 
 interface PageProps {
   searchParams: Promise<{
@@ -17,7 +18,7 @@ interface PageProps {
 }
 
 export default async function AnalyticsRoutesPage({ searchParams }: PageProps) {
-  await requireRouteAccess(["ANALYST", "DISPATCHER"]);
+  const auth = await requireRouteAccess(["ANALYST", "DISPATCHER"]);
 
   const params = await searchParams;
   const supabase = await createClient();
@@ -132,7 +133,7 @@ export default async function AnalyticsRoutesPage({ searchParams }: PageProps) {
             <CardContent>
               {error && (
                 <div className="rounded-md bg-danger-soft p-3 text-sm text-danger-soft-foreground mb-4">
-                  Failed to discover routes: {error.message}
+                  Failed to discover routes: {courierErrorMessage(error.message, "ANALYTICS_ROUTE_EXPLORER", auth.userId)}
                 </div>
               )}
 

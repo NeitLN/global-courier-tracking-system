@@ -5,9 +5,10 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { courierErrorMessage } from "@/lib/courier/errors";
 
 export default async function AnalyticsDriversPage() {
-  await requireRouteAccess(["ANALYST", "DISPATCHER"]);
+  const auth = await requireRouteAccess(["ANALYST", "DISPATCHER"]);
 
   const supabase = await createClient();
   const { data: rankings = [], error } = await supabase.rpc("fn_get_analyst_driver_performance");
@@ -26,7 +27,7 @@ export default async function AnalyticsDriversPage() {
         <CardContent>
           {error && (
             <div className="rounded-md bg-danger-soft p-3 text-sm text-danger-soft-foreground mb-4">
-              Failed to load driver rankings: {error.message}
+              Failed to load driver rankings: {courierErrorMessage(error.message, "ANALYTICS_DRIVER_PERFORMANCE", auth.userId)}
             </div>
           )}
 

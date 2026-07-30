@@ -5,9 +5,10 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { courierErrorMessage } from "@/lib/courier/errors";
 
 export default async function AnalyticsHubsPage() {
-  await requireRouteAccess(["ANALYST", "DISPATCHER"]);
+  const auth = await requireRouteAccess(["ANALYST", "DISPATCHER"]);
 
   const supabase = await createClient();
   const { data: analysis = [], error } = await supabase.rpc("fn_inter_scan_hub_analysis");
@@ -26,7 +27,7 @@ export default async function AnalyticsHubsPage() {
         <CardContent>
           {error && (
             <div className="rounded-md bg-danger-soft p-3 text-sm text-danger-soft-foreground mb-4">
-              Failed to load hub latency analysis: {error.message}
+              Failed to load hub latency analysis: {courierErrorMessage(error.message, "ANALYTICS_HUB_LATENCY", auth.userId)}
             </div>
           )}
 

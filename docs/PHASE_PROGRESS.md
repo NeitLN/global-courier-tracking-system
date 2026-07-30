@@ -100,10 +100,24 @@ Current phase execution for the Global Courier & Tracking System project.
   - [x] `/operator/delivery-attempts` delivery attempt outcomes managed by a secure, `SECURITY DEFINER` RPC combination (`fn_record_delivery_attempt`, `fn_get_hub_drivers`, and `fn_get_hub_delivery_attempts`), protecting private driver PII while satisfying standard operator capabilities.
   - [x] Standard primary key field name mapped gracefully via PostgREST column aliasing.
   - [x] 13/13 pgTAP assertions for operator-level actions fully integrated and verified.
-- [ ] **Phase 10: Dispatcher Control Center**
-- [ ] **Phase 11: Analyst Dashboard and F7–F10**
-- [ ] **Phase 12: Integrated Role Dashboards**
-- [ ] **Phase 13: Error Handling, Audit and Observability**
+- [x] **Phase 10: Dispatcher Control Center** (IMPLEMENTED — VALIDATION PENDING)
+  - [x] `/dispatcher/trips`, `/dispatcher/plan-track` built on `fn_create_trip`, `fn_assign_package_to_trip`, and the `fn_get_dispatcher_*` read RPCs.
+  - [x] Corrective migrations `20260730140000` and `20260730150000` (this pass) closed a hub-scope
+    authorization gap in `fn_record_delivery_attempt` and a cross-trip double-booking race in
+    `fn_assign_package_to_trip` — see `docs/DECISION_LOG.md`.
+  - [ ] `npm run check` and `npx supabase test db` not runnable in this sandbox (no Docker/registry) — must be run before push.
+- [x] **Phase 11: Analyst Dashboard and F7–F10** (IMPLEMENTED — VALIDATION PENDING)
+  - [x] F7–F10 (`/analytics/hubs`, `/analytics/sla`, `/analytics/drivers`, `/analytics/routes`) backed by
+    `fn_inter_scan_hub_analysis`, `fn_sla_compliance`, `fn_get_analyst_driver_performance`, `fn_find_routes`.
+  - [x] Analyst driver ranking uses a privacy-safe RPC separate from the Dispatcher-only `fn_rank_driver_performance`.
+- [x] **Phase 12: Integrated Role Dashboards** (IMPLEMENTED — VALIDATION PENDING)
+  - [x] `/dashboard` renders role-specific real KPIs (Customer, Hub Operator, Dispatcher, Analyst) from live RPC/query data.
+- [x] **Phase 13: Error Handling, Audit and Observability** (IMPLEMENTED — VALIDATION PENDING)
+  - [x] Centralized error taxonomy in `src/lib/courier/errors.ts` (`courierErrorMessage`).
+  - [x] This pass removed a raw-DB-text fallback branch in `courierErrorMessage` and fixed 8 call sites
+    (4 analytics pages, inventory, dispatcher trips, delivery-attempts x2) that were rendering
+    `error.message` directly instead of going through the mapper — both violated the "never show raw
+    SQL/Supabase internals" rule.
 - [ ] **Phase 14: Full Testing and Security QA**
 - [ ] **Phase 15: Deployment**
 - [ ] **Phase 16: Final Report Update**

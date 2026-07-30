@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { formatDateTime } from "@/lib/courier/format";
+import { courierErrorMessage } from "@/lib/courier/errors";
 import { DeliveryAttemptForm } from "./DeliveryAttemptForm";
 
 export const dynamic = "force-dynamic";
@@ -94,7 +95,7 @@ export default async function OperatorDeliveryAttemptsPage() {
       <PageContainer>
         <PageHeader title="Delivery Attempts" description="Recorded delivery outcomes for your hub's drivers." />
         <Alert tone="danger" title="Database Error">
-          Could not load the drivers for your hub: {driversError.message}
+          Could not load the drivers for your hub: {courierErrorMessage(driversError.message, "OPERATOR_GET_HUB_DRIVERS", auth.userId)}
         </Alert>
       </PageContainer>
     );
@@ -149,7 +150,7 @@ export default async function OperatorDeliveryAttemptsPage() {
             <CardContent>
               {attemptsError && (
                 <Alert tone="danger" title="Could not load attempts">
-                  {attemptsError.message}
+                  {courierErrorMessage(attemptsError.message, "OPERATOR_GET_HUB_DELIVERY_ATTEMPTS", auth.userId)}
                 </Alert>
               )}
 

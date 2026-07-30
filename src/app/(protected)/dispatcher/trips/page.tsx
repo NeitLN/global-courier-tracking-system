@@ -6,9 +6,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TripForm } from "./TripForm";
+import { courierErrorMessage } from "@/lib/courier/errors";
 
 export default async function TripsPage() {
-  await requireRouteAccess(["DISPATCHER"]);
+  const auth = await requireRouteAccess(["DISPATCHER"]);
 
   const supabase = await createClient();
 
@@ -42,7 +43,7 @@ export default async function TripsPage() {
             <CardContent>
               {tripsError && (
                 <div className="rounded-md bg-danger-soft p-3 text-sm text-danger-soft-foreground">
-                  Failed to load trips roster: {tripsError.message}
+                  Failed to load trips roster: {courierErrorMessage(tripsError.message, "DISPATCHER_TRIPS_LIST", auth.userId)}
                 </div>
               )}
 

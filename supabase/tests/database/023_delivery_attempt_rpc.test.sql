@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(13);
+SELECT plan(14);
 
 -- 1. Setup reference and domain data
 INSERT INTO public.transit_hub (hub_code, hub_name) VALUES ('P9-H1', 'Phase 9 Hub 1');
@@ -111,13 +111,14 @@ SELECT is((
   WHERE p.tracking_no = 'P9-TRACK001' AND da.outcome = 'SUCCESS'
 ), 1, 'Successful delivery attempt was inserted correctly');
 
--- Test 7: Verify that the successful delivery attempt automatically registered a DELIVERED tracking event
+-- Test 7: A successful delivery attempt must NOT automatically create a tracking_event.
+-- DELIVERED must be recorded explicitly via fn_record_checkpoint_scan (see DECISION_LOG.md).
 SELECT is((
   SELECT count(*)::int
   FROM public.tracking_event te
   JOIN public.package p ON te.package_id = p.package_id
   WHERE p.tracking_no = 'P9-TRACK001' AND te.status_code = 'DELIVERED'
-), 1, 'Successful delivery attempt atomically inserts a DELIVERED tracking event');
+), 0, 'Successful delivery attempt does not implicitly insert a DELIVERED tracking event');
 
 -- Test 8: Non-Hub Operator user should be rejected
 RESET ROLE;
@@ -153,7 +154,7 @@ SELECT throws_ok(format(
 -- Test 10: Tracking events are immutable (no updates/deletes)
 RESET ROLE;
 SELECT throws_ok(
-  'UPDATE public.tracking_event SET status_code = ''REGISTERED'' WHERE status_code = ''DELIVERED''',
+  'UPDATE public.tracking_event SET status_code = ''PICKED_UP'' WHERE status_code = ''OUT_FOR_DELIVERY''',
   NULL,
   NULL,
   'Cannot update tracking events as they are append-only'
@@ -182,6 +183,29 @@ SELECT lives_ok(format(
   'SELECT * FROM public.fn_get_hub_delivery_attempts(%s)',
   (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H1')
 ), 'Hub Operator can retrieve delivery attempts for their own hub');
+
+-- Test 14: HUB_OPERATOR cannot record a delivery attempt for a driver based at another hub
+RESET ROLE;
+INSERT INTO public.transit_hub (hub_code, hub_name) VALUES ('P9-H2', 'Phase 9 Hub 2');
+INSERT INTO public.driver (full_name, license_no, phone, base_hub_id) VALUES
+  ('Phase 9 Other-Hub Driver', 'P9-LIC002', 'P9-PH002', (SELECT hub_id FROM public.transit_hub WHERE hub_code = 'P9-H2'));
+
+-- Capture the driver_id while still superuser: the "driver" table is denied to
+-- "authenticated" (see RLS_AUTHORIZATION.md), so this must not be re-queried after
+-- switching role below.
+SELECT set_config('test.p9_other_hub_driver_id', (SELECT driver_id::text FROM public.driver WHERE license_no = 'P9-LIC002'), true);
+
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', '99999999-9999-9999-9999-999999999999', 'role', 'authenticated')::text, true);
+SET LOCAL ROLE authenticated;
+
+SELECT throws_ok(format(
+  'SELECT public.fn_record_delivery_attempt(%L, %s, now(), %L, %L, %L)',
+  'P9-TRACK001',
+  current_setting('test.p9_other_hub_driver_id'),
+  'FAILED',
+  'Customer was not home',
+  'Attempt using a driver from another hub'
+), NULL, NULL, 'Hub Operator cannot record a delivery attempt for a driver outside their hub');
 
 SELECT * FROM finish();
 ROLLBACK;

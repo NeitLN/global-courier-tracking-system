@@ -45,10 +45,6 @@ export function courierErrorMessage(
   } else if (/unauthorized|permission|row-level security|permission denied/i.test(value)) {
     errorCategory = "PERMISSION_DENIED";
     mappedMessage = "You do not have permission";
-  } else if (value && value.includes(":")) {
-    // Other database check constraints or standard errors
-    errorCategory = "DATABASE_CONSTRAINT";
-    mappedMessage = value.split(":").slice(-1)[0].trim();
   }
 
   // 2. Structured Server-Side Logging (No secrets, cookie headers or raw PII)

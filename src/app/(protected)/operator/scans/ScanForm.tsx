@@ -94,6 +94,7 @@ export function ScanForm({ staffName, hubCode, hubName }: ScanFormProps) {
               <option value="PICKED_UP">Picked Up (PICKED_UP)</option>
               <option value="IN_TRANSIT">In Transit (IN_TRANSIT)</option>
               <option value="OUT_FOR_DELIVERY">Out For Delivery (OUT_FOR_DELIVERY)</option>
+              <option value="DELIVERED">Delivered (DELIVERED)</option>
               <option value="RETURNED">Returned (RETURNED)</option>
             </SelectField>
 

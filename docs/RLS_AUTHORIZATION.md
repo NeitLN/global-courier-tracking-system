@@ -71,6 +71,21 @@ A caller cannot become trusted merely by:
 | `fn_inter_scan_hub_analysis` | Denied | Denied | Allowed | Allowed |
 | `fn_sla_compliance` | Denied | Denied | Allowed | Allowed |
 | `fn_rank_driver_performance` | Denied | Denied | Allowed | Denied |
+| `fn_public_track_package` | Public (anon) | Public (anon) | Public (anon) | Public (anon) |
+| `fn_register_package_by_receiver_email` | Allowed | Denied | Denied | Denied |
+| `fn_customer_dashboard_summary` | Own scope | Denied | Denied | Denied |
+| `fn_record_delivery_attempt` | Denied | Allowed (own hub's drivers only) | Denied | Denied |
+| `fn_get_hub_drivers` | Denied | Allowed (own hub) | Allowed (any hub) | Denied |
+| `fn_get_hub_delivery_attempts` | Denied | Allowed (own hub) | Allowed (any hub) | Denied |
+| `fn_create_trip` | Denied | Denied | Allowed | Denied |
+| `fn_assign_package_to_trip` | Denied | Denied | Allowed | Denied |
+| `fn_get_dispatcher_routes` / `_vehicles` / `_drivers` / `_trips` | Denied | Denied | Allowed | Denied |
+| `fn_get_dispatcher_unassigned_packages` | Denied | Denied | Allowed | Denied |
+| `fn_get_analyst_driver_performance` | Denied | Denied | Allowed | Allowed (no PII) |
+
+*Note: `fn_get_analyst_driver_performance` is a distinct, privacy-safe RPC introduced for
+ANALYST access — it does not expose the same PII-bearing columns as the DISPATCHER-only
+`fn_rank_driver_performance`. See §7 below and `docs/DECISION_LOG.md`.*
 
 ## 5. Private Helpers and Recursive RLS Prevention
 To avoid infinite recursive RLS policies on `public.profiles`, a private schema `authz_private` was created. It contains `SECURITY DEFINER` functions like `current_app_role()`, `current_customer_id()`, `current_user_owns_package()`, etc., which read system state efficiently and safely, without looping RLS evaluation.
@@ -78,8 +93,16 @@ To avoid infinite recursive RLS policies on `public.profiles`, a private schema 
 ## 6. Write RPCs (SECURITY DEFINER)
 Write RPCs execute as `SECURITY DEFINER` because they write to tables that forbid direct `INSERT/UPDATE` to regular users. They internally perform rigorous authorization checks against the active user's identity before committing mutations.
 
-## 7. Dispatcher Write RPCs Deferred
-Operational writes by DISPATCHERs (creating trips, assigning legs) are deferred until future phases where the specific UI and RPC contracts are better defined.
+## 7. Dispatcher Write RPCs
+Operational writes by DISPATCHERs (creating trips via `fn_create_trip`, assigning package
+legs via `fn_assign_package_to_trip`) were implemented in Phase 10
+(`20260730100000_create_dispatcher_trip_rpc.sql`,
+`20260730110000_create_dispatcher_assignment_rpc.sql`, hardened by
+`20260730150000_fix_assign_package_to_trip_double_booking.sql`). Both are
+`SECURITY DEFINER`, restricted to the `DISPATCHER` role (or a trusted `service_role`
+backend), and `fn_assign_package_to_trip` locks the target package row
+(`FOR UPDATE`) before checking for an existing active leg to prevent the same package
+being assigned onto two trips concurrently.
 
 ## 8. Role-Assignment Boundary
 Role bindings (`app_role`, `customer_id`, `staff_id`) cannot be modified by any application role. Only a trusted backend administrator (`service_role`) or superuser can change role definitions, establishing an absolute security boundary.

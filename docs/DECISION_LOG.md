@@ -38,3 +38,35 @@ As defined in Section 2 of the approved final report, the domain user classes ar
 - Any package status change must be recorded separately through F3 as a `TRACKING_EVENT` and validated by R6.
 - A failed attempt may be followed by another OUT_FOR_DELIVERY event or by RETURNED, depending on a later explicit operational decision.
 - A successful attempt should be followed by an explicit DELIVERED tracking event.
+- **2026-07-30 correction:** the Phase 9 implementation of `fn_record_delivery_attempt`
+  (`20260727110000_create_delivery_attempt_rpc.sql`) diverged from this decision by
+  auto-inserting a `DELIVERED` tracking_event on `outcome = 'SUCCESS'`, because
+  `/operator/scans` had no `DELIVERED` option in its status dropdown at the time — there
+  was no other way to reach the terminal state. Migration
+  `20260730140000_fix_delivery_attempt_hub_scope_and_history.sql` removed the auto-insert
+  to restore the original decision, and `ScanForm.tsx` now offers `DELIVERED` as an
+  explicit status choice so Hub Operators record it themselves via
+  `fn_record_checkpoint_scan`, same as any other checkpoint scan.
+
+## Analyst Driver Ranking Access (Phase 6 note resolved in Phase 11)
+Phase 6 flagged a mismatch: the UI roadmap listed an Analyst → Driver Performance view,
+but the only ranking RPC (`fn_rank_driver_performance`) was DISPATCHER-only and exposes
+driver PII (license number, phone) unsuitable for ANALYST access. Resolved in Phase 11 by
+adding a separate, privacy-safe `fn_get_analyst_driver_performance` RPC restricted to
+ANALYST/DISPATCHER that returns only aggregate performance fields (name, attempts,
+successes, failures, success rate, rank) — no license/phone/PII columns. ANALYST never
+calls the DISPATCHER-only RPC.
+
+## Phase 13 Error Taxonomy
+- All user-facing error messages must go through `courierErrorMessage()`
+  (`src/lib/courier/errors.ts`), which maps known database/RPC error signatures to a
+  fixed list of safe, pre-written messages (duplicate tracking, sender=receiver, tier
+  limit exceeded, backward/skipped status, terminal package, driver/vehicle
+  double-booking, missing failure reason, permission denied).
+- Any error that does not match a known pattern falls through to a single generic
+  message ("An unexpected error occurred. Please try again."). There is intentionally
+  **no fallback that echoes any part of the raw database error text** — an earlier
+  version split the raw message on `:` and returned the tail segment, which could still
+  leak internal detail; this was removed on 2026-07-30 along with 8 UI call sites
+  (4 analytics pages, hub inventory, dispatcher trips, delivery attempts) that were
+  rendering `error.message` directly instead of calling the mapper.
