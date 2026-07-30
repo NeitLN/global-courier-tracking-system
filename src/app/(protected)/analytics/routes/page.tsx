@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SelectField } from "@/components/ui/SelectField";
 import { Button } from "@/components/ui/Button";
 import { courierErrorMessage } from "@/lib/courier/errors";
+import { StaggerList, StaggerItem } from "@/components/motion/StaggerList";
 
 interface PageProps {
   searchParams: Promise<{
@@ -138,7 +139,7 @@ export default async function AnalyticsRoutesPage({ searchParams }: PageProps) {
               )}
 
               {routes && routes.length > 0 ? (
-                <div className="space-y-4">
+                <StaggerList className="space-y-4">
                   {routes.map((r, idx) => {
                     // Map path_array of hub IDs to beautiful, human-readable codes
                     const pathCodes = r.path_array
@@ -146,9 +147,9 @@ export default async function AnalyticsRoutesPage({ searchParams }: PageProps) {
                       : [];
 
                     return (
-                      <div
+                      <StaggerItem
                         key={idx}
-                        className="rounded-lg border border-border bg-card p-4 hover:border-primary-soft transition-colors space-y-3"
+                        className="card-interactive rounded-lg border border-border bg-card p-4 hover:border-primary-soft"
                       >
                         <div className="flex items-center justify-between">
                           <span className="rounded bg-primary-soft/10 text-primary px-2 py-0.5 text-xs font-bold font-mono">
@@ -178,10 +179,10 @@ export default async function AnalyticsRoutesPage({ searchParams }: PageProps) {
                           <span>Total Distance: <strong className="text-foreground">{r.total_distance_km} km</strong></span>
                           <span>Planned Transport: <strong className="text-foreground">{r.total_planned_hours} hours</strong></span>
                         </div>
-                      </div>
+                      </StaggerItem>
                     );
                   })}
-                </div>
+                </StaggerList>
               ) : (
                 <EmptyState
                   icon={RouteIcon}

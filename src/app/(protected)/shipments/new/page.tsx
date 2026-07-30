@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { SelectField } from "@/components/ui/SelectField";
 import { Button } from "@/components/ui/Button";
 import { registerShipment } from "./actions";
+import { Reveal } from "@/components/motion/Reveal";
 
 type Service = { service_id: number; service_name: string; max_weight_kg: number };
 type Hub = { hub_id: number; hub_code: string; hub_name: string };
@@ -30,7 +31,7 @@ export default async function NewShipmentPage({ searchParams }: { searchParams: 
       {(serviceError || hubError || !services || !hubs) ? (
         <Alert tone="danger" title="Reference data unavailable">Service types or hubs could not be loaded, so registration is disabled rather than submitting incomplete values.</Alert>
       ) : (
-      <form action={registerShipment}>
+      <Reveal><form action={registerShipment}>
         <Card>
           <CardHeader><CardTitle>Shipment details</CardTitle></CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -55,7 +56,7 @@ export default async function NewShipmentPage({ searchParams }: { searchParams: 
             <div className="sm:col-span-2 flex justify-end"><Button type="submit">Register shipment</Button></div>
           </CardContent>
         </Card>
-      </form>
+      </form></Reveal>
       )}
     </PageContainer>
   );

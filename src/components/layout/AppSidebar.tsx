@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, PanelLeftClose, PanelLeftOpen, Truck } from "lucide-react";
 import type { AppRole } from "@/lib/auth/roles";
 import { getNavForRole } from "@/lib/navigation/nav-config";
@@ -38,7 +39,7 @@ export function AppSidebar({ role, className }: AppSidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-150 lg:flex",
+        "hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-[cubic-bezier(0.2,0,0,1)] lg:flex",
         collapsed ? "w-16" : "w-64",
         className,
       )}
@@ -63,7 +64,7 @@ export function AppSidebar({ role, className }: AppSidebarProps) {
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "focus-ring flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                      "focus-ring flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150",
                       active
                         ? "bg-sidebar-active text-sidebar-active-foreground"
                         : "text-sidebar-foreground hover:bg-sidebar-active/60",
@@ -88,29 +89,37 @@ export function AppSidebar({ role, className }: AppSidebarProps) {
                   )}
                 </div>
 
-                {hasChildren && !collapsed && isExpanded && (
-                  <ul className="ml-6 mt-0.5 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
-                    {item.children!.map((child) => {
-                      const childActive = pathname === child.href;
-                      return (
-                        <li key={child.href}>
-                          <Link
-                            href={child.href}
-                            aria-current={childActive ? "page" : undefined}
-                            className={cn(
-                              "focus-ring block rounded-md px-3 py-1.5 text-sm",
-                              childActive
-                                ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
-                                : "text-sidebar-muted-foreground hover:bg-sidebar-active/60 hover:text-sidebar-foreground",
-                            )}
-                          >
-                            {child.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                <AnimatePresence initial={false}>
+                  {hasChildren && !collapsed && isExpanded && (
+                    <motion.ul
+                      className="ml-6 mt-0.5 flex flex-col gap-0.5 overflow-hidden border-l border-sidebar-border pl-3"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+                    >
+                      {item.children!.map((child) => {
+                        const childActive = pathname === child.href;
+                        return (
+                          <li key={child.href}>
+                            <Link
+                              href={child.href}
+                              aria-current={childActive ? "page" : undefined}
+                              className={cn(
+                                "focus-ring block rounded-md px-3 py-1.5 text-sm transition-colors duration-150",
+                                childActive
+                                  ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
+                                  : "text-sidebar-muted-foreground hover:bg-sidebar-active/60 hover:text-sidebar-foreground",
+                              )}
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
               </li>
             );
           })}

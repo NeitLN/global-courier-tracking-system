@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { formatDateTime } from "@/lib/courier/format";
 import { courierErrorMessage } from "@/lib/courier/errors";
 import { DeliveryAttemptForm } from "./DeliveryAttemptForm";
+import { DataTableShell } from "@/components/ui/DataTableShell";
+import { Reveal } from "@/components/motion/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -161,48 +163,40 @@ export default async function OperatorDeliveryAttemptsPage() {
                   <p className="text-xs mt-1">Use the form to record the first outcome.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-lg border bg-card">
-                  <table className="w-full border-collapse text-left text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/50 font-medium text-muted-foreground">
-                        <th className="p-3">Package</th>
-                        <th className="p-3">Driver</th>
-                        <th className="p-3">Outcome</th>
-                        <th className="p-3">Attempt Time</th>
-                        <th className="p-3">Details / Reasons</th>
+                <Reveal>
+                  <DataTableShell
+                    columns={["Package", "Driver", "Outcome", "Attempt Time", "Details / Reasons"]}
+                    caption="Recent delivery attempts at your hub"
+                  >
+                    {typedAttempts.map((attempt) => (
+                      <tr key={attempt.delivery_attempt_id} className="transition-colors duration-150 hover:bg-muted/40">
+                        <td className="px-3 py-3 font-mono font-medium text-foreground">
+                          {attempt.package?.tracking_no}
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="font-medium text-foreground">{attempt.driver?.full_name}</div>
+                          <div className="text-xs text-muted-foreground">{attempt.driver?.license_no}</div>
+                        </td>
+                        <td className="px-3 py-3">
+                          <Badge tone={attempt.outcome === "SUCCESS" ? "success" : "danger"}>
+                            {attempt.outcome}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-3 text-muted-foreground">
+                          {formatDateTime(attempt.attempt_time)}
+                        </td>
+                        <td className="px-3 py-3 text-xs text-muted-foreground max-w-xs truncate">
+                          {attempt.outcome === "FAILED" && (
+                            <p className="font-semibold text-danger-foreground">
+                              Reason: {attempt.failure_reason}
+                            </p>
+                          )}
+                          {attempt.notes && <p className="italic">Note: {attempt.notes}</p>}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {typedAttempts.map((attempt) => (
-                        <tr key={attempt.delivery_attempt_id} className="hover:bg-muted/20">
-                          <td className="p-3 font-mono font-medium text-foreground">
-                            {attempt.package?.tracking_no}
-                          </td>
-                          <td className="p-3">
-                            <div className="font-medium text-foreground">{attempt.driver?.full_name}</div>
-                            <div className="text-xs text-muted-foreground">{attempt.driver?.license_no}</div>
-                          </td>
-                          <td className="p-3">
-                            <Badge tone={attempt.outcome === "SUCCESS" ? "success" : "danger"}>
-                              {attempt.outcome}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-muted-foreground">
-                            {formatDateTime(attempt.attempt_time)}
-                          </td>
-                          <td className="p-3 text-xs text-muted-foreground max-w-xs truncate">
-                            {attempt.outcome === "FAILED" && (
-                              <p className="font-semibold text-danger-foreground">
-                                Reason: {attempt.failure_reason}
-                              </p>
-                            )}
-                            {attempt.notes && <p className="italic">Note: {attempt.notes}</p>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </DataTableShell>
+                </Reveal>
               )}
             </CardContent>
           </Card>

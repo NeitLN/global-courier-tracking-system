@@ -54,6 +54,13 @@
   --sidebar-border: #1e3a5f;
   --sidebar-active: #16304f;
   --sidebar-active-foreground: #ffffff;
+
+  /* Motion scale — shared by every transition/animation in the app */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1.3);
 }
 
 @theme inline {
@@ -98,6 +105,17 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,5 +195,77 @@ body {
   .focus-ring:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+  }
+
+  /* Clickable cards (module-picker grids, dashboard shortcuts) */
+  .card-interactive {
+    transition:
+      transform var(--duration-base) var(--ease-standard),
+      box-shadow var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard);
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -8px rgb(15 23 42 / 0.18);
+  }
+}
+
+/*
+ * Native <dialog> open/close transitions (Modal, Drawer). Both already
+ * animate via showModal()/close(); this only adds the enter/exit motion.
+ * @starting-style + allow-discrete is supported in current Chrome/Edge/
+ * Safari — unsupported browsers just keep the old instant pop, no
+ * regression. Reduced-motion is handled globally above.
+ */
+dialog {
+  opacity: 0;
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard),
+    overlay var(--duration-base) allow-discrete,
+    display var(--duration-base) allow-discrete;
+  transform: scale(0.96) translateY(8px);
+}
+dialog[open] {
+  opacity: 1;
+  transform: none;
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+dialog::backdrop {
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+dialog[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+/* Left/right slide-in drawers (side-anchored dialogs) get a slide instead
+   of the default scale-up, matching their fixed inset-y positioning. */
+dialog.drawer-left,
+dialog.drawer-right {
+  transform: translateX(-16px);
+}
+dialog.drawer-right {
+  transform: translateX(16px);
+}
+dialog.drawer-left[open],
+dialog.drawer-right[open] {
+  transform: none;
+}
+@starting-style {
+  dialog.drawer-left[open] {
+    transform: translateX(-16px);
+  }
+  dialog.drawer-right[open] {
+    transform: translateX(16px);
   }
 }

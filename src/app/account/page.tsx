@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/motion/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function AccountPage() {
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background p-6">
-      <div className="w-full max-w-md space-y-4">
+      <Reveal className="w-full max-w-md space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Account</CardTitle>
@@ -81,7 +82,7 @@ export default async function AccountPage() {
             This page updates automatically once your account status changes.
           </p>
         )}
-      </div>
+      </Reveal>
     </main>
   );
 }

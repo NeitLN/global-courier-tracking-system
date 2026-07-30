@@ -4,6 +4,7 @@ import { requireRouteAccess } from "@/lib/auth/route-access";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
+import { StaggerList, StaggerItem } from "@/components/motion/StaggerList";
 
 const MODULES = [
   { label: "Hub Analysis", href: "/analytics/hubs", icon: BarChart3, description: "Inter-scan interval analysis by hub." },
@@ -18,24 +19,26 @@ export default async function AnalyticsOverviewPage() {
   return (
     <PageContainer>
       <PageHeader title="Analytics" description="Reporting views backed by approved read-only RPCs." />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {MODULES.map((module) => {
           const Icon = module.icon;
           return (
-            <Link key={module.href} href={module.href}>
-              <Card className="h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
-                <CardContent className="flex flex-col items-start gap-2">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <p className="text-sm font-medium text-foreground">{module.label}</p>
-                  <p className="text-caption">{module.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <StaggerItem key={module.href}>
+              <Link href={module.href}>
+                <Card className="card-interactive h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
+                  <CardContent className="flex flex-col items-start gap-2">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    <p className="text-sm font-medium text-foreground">{module.label}</p>
+                    <p className="text-caption">{module.description}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerList>
     </PageContainer>
   );
 }

@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TripForm } from "./TripForm";
 import { courierErrorMessage } from "@/lib/courier/errors";
+import { DataTableShell } from "@/components/ui/DataTableShell";
+import { Reveal } from "@/components/motion/Reveal";
 
 export default async function TripsPage() {
   const auth = await requireRouteAccess(["DISPATCHER"]);
@@ -48,52 +50,41 @@ export default async function TripsPage() {
               )}
 
               {trips && trips.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/50 text-caption font-medium">
-                        <th className="p-3">Trip ID</th>
-                        <th className="p-3">Route</th>
-                        <th className="p-3">Driver</th>
-                        <th className="p-3">Vehicle</th>
-                        <th className="p-3">Departure</th>
+                <Reveal>
+                  <DataTableShell columns={["Trip ID", "Route", "Driver", "Vehicle", "Departure"]} caption="Scheduled trips roster">
+                    {((trips || []) as Array<{
+                      trip_id: number;
+                      route_id: number;
+                      origin_hub_code: string;
+                      dest_hub_code: string;
+                      mode: string;
+                      driver_name: string;
+                      vehicle_plate: string;
+                      depart: string;
+                    }>).map((t) => (
+                      <tr key={t.trip_id} className="transition-colors duration-150 hover:bg-muted/40">
+                        <td className="px-3 py-3 font-mono font-medium text-foreground">
+                          #{t.trip_id}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className="font-medium text-foreground">
+                            {t.origin_hub_code} → {t.dest_hub_code}
+                          </span>
+                          <span className="ml-1.5 text-xs text-muted-foreground uppercase">
+                            ({t.mode})
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-foreground">{t.driver_name}</td>
+                        <td className="px-3 py-3 text-muted-foreground font-mono">
+                          {t.vehicle_plate}
+                        </td>
+                        <td className="px-3 py-3 text-foreground">
+                          {new Date(t.depart).toLocaleString()}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {((trips || []) as Array<{
-                        trip_id: number;
-                        route_id: number;
-                        origin_hub_code: string;
-                        dest_hub_code: string;
-                        mode: string;
-                        driver_name: string;
-                        vehicle_plate: string;
-                        depart: string;
-                      }>).map((t) => (
-                        <tr key={t.trip_id} className="hover:bg-muted/20">
-                          <td className="p-3 font-mono font-medium text-foreground">
-                            #{t.trip_id}
-                          </td>
-                          <td className="p-3">
-                            <span className="font-medium text-foreground">
-                              {t.origin_hub_code} → {t.dest_hub_code}
-                            </span>
-                            <span className="ml-1.5 text-xs text-muted-foreground uppercase">
-                              ({t.mode})
-                            </span>
-                          </td>
-                          <td className="p-3 text-foreground">{t.driver_name}</td>
-                          <td className="p-3 text-muted-foreground font-mono">
-                            {t.vehicle_plate}
-                          </td>
-                          <td className="p-3 text-foreground">
-                            {new Date(t.depart).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </DataTableShell>
+                </Reveal>
               ) : (
                 <EmptyState
                   icon={Truck}

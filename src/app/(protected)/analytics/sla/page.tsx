@@ -6,6 +6,9 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { courierErrorMessage } from "@/lib/courier/errors";
+import { DataTableShell } from "@/components/ui/DataTableShell";
+import { Reveal } from "@/components/motion/Reveal";
+import { StaggerList, StaggerItem } from "@/components/motion/StaggerList";
 
 export default async function AnalyticsSlaPage() {
   const auth = await requireRouteAccess(["ANALYST", "DISPATCHER"]);
@@ -42,36 +45,44 @@ export default async function AnalyticsSlaPage() {
       />
 
       {/* Aggregate KPI Summary Row */}
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
-        <Card>
-          <CardContent className="pt-4 flex flex-col gap-1">
-            <span className="text-caption">SLA COMPLIANCE RATE</span>
-            <span className="text-2xl font-bold text-success">{pctMet}%</span>
-            <span className="text-[10px] text-muted-foreground">{met} met out of {total} total</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 flex flex-col gap-1">
-            <span className="text-caption">BREACH RATE</span>
-            <span className="text-2xl font-bold text-danger">{pctBreached}%</span>
-            <span className="text-[10px] text-muted-foreground">{breached} shipments breached</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 flex flex-col gap-1">
-            <span className="text-caption">OPEN ORDERS</span>
-            <span className="text-2xl font-bold text-primary">{open}</span>
-            <span className="text-[10px] text-muted-foreground">In-progress transit</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 flex flex-col gap-1">
-            <span className="text-caption">RETURNED ORDERS</span>
-            <span className="text-2xl font-bold text-foreground">{returned}</span>
-            <span className="text-[10px] text-muted-foreground">Returned to sender</span>
-          </CardContent>
-        </Card>
-      </div>
+      <StaggerList className="grid gap-4 md:grid-cols-4 mb-6">
+        <StaggerItem>
+          <Card className="card-interactive">
+            <CardContent className="pt-4 flex flex-col gap-1">
+              <span className="text-caption">SLA COMPLIANCE RATE</span>
+              <span className="text-2xl font-bold text-success">{pctMet}%</span>
+              <span className="text-[10px] text-muted-foreground">{met} met out of {total} total</span>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card className="card-interactive">
+            <CardContent className="pt-4 flex flex-col gap-1">
+              <span className="text-caption">BREACH RATE</span>
+              <span className="text-2xl font-bold text-danger">{pctBreached}%</span>
+              <span className="text-[10px] text-muted-foreground">{breached} shipments breached</span>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card className="card-interactive">
+            <CardContent className="pt-4 flex flex-col gap-1">
+              <span className="text-caption">OPEN ORDERS</span>
+              <span className="text-2xl font-bold text-primary">{open}</span>
+              <span className="text-[10px] text-muted-foreground">In-progress transit</span>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card className="card-interactive">
+            <CardContent className="pt-4 flex flex-col gap-1">
+              <span className="text-caption">RETURNED ORDERS</span>
+              <span className="text-2xl font-bold text-foreground">{returned}</span>
+              <span className="text-[10px] text-muted-foreground">Returned to sender</span>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+      </StaggerList>
 
       {/* SLA Manifest Table */}
       <Card>
@@ -86,54 +97,45 @@ export default async function AnalyticsSlaPage() {
           )}
 
           {records && records.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50 text-caption font-medium">
-                    <th className="p-3">Tracking No</th>
-                    <th className="p-3">Service Type</th>
-                    <th className="p-3">Registered At</th>
-                    <th className="p-3 text-right">Elapsed Time</th>
-                    <th className="p-3 text-right">SLA Limit</th>
-                    <th className="p-3 text-center pr-6">SLA Status</th>
+            <Reveal>
+              <DataTableShell
+                columns={["Tracking No", "Service Type", "Registered At", "Elapsed Time", "SLA Limit", "SLA Status"]}
+                caption="Shipment SLA roster"
+              >
+                {records.map((r) => (
+                  <tr key={r.package_id} className="transition-colors duration-150 hover:bg-muted/40">
+                    <td className="px-3 py-3 font-mono font-medium text-foreground">
+                      {r.tracking_no}
+                    </td>
+                    <td className="px-3 py-3 text-foreground">{r.service_name}</td>
+                    <td className="px-3 py-3 text-muted-foreground">
+                      {new Date(r.registered_at).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono text-foreground font-medium">
+                      {r.elapsed_hours}h
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono text-muted-foreground">
+                      {r.sla_hours}h
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                          r.compliance_status === "MET"
+                            ? "bg-success-soft text-success-soft-foreground"
+                            : r.compliance_status === "BREACHED"
+                              ? "bg-danger-soft text-danger-soft-foreground"
+                              : r.compliance_status === "RETURNED"
+                                ? "bg-muted text-foreground"
+                                : "bg-info-soft text-info-soft-foreground"
+                        }`}
+                      >
+                        {r.compliance_status}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {records.map((r) => (
-                    <tr key={r.package_id} className="hover:bg-muted/20">
-                      <td className="p-3 font-mono font-medium text-foreground">
-                        {r.tracking_no}
-                      </td>
-                      <td className="p-3 text-foreground">{r.service_name}</td>
-                      <td className="p-3 text-muted-foreground">
-                        {new Date(r.registered_at).toLocaleString()}
-                      </td>
-                      <td className="p-3 text-right font-mono text-foreground font-medium">
-                        {r.elapsed_hours}h
-                      </td>
-                      <td className="p-3 text-right font-mono text-muted-foreground">
-                        {r.sla_hours}h
-                      </td>
-                      <td className="p-3 text-center pr-6">
-                        <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
-                            r.compliance_status === "MET"
-                              ? "bg-success-soft text-success-soft-foreground"
-                              : r.compliance_status === "BREACHED"
-                                ? "bg-danger-soft text-danger-soft-foreground"
-                                : r.compliance_status === "RETURNED"
-                                  ? "bg-muted text-foreground"
-                                  : "bg-info-soft text-info-soft-foreground"
-                          }`}
-                        >
-                          {r.compliance_status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </DataTableShell>
+            </Reveal>
           ) : (
             <EmptyState
               icon={Gauge}

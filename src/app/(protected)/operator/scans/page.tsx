@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Alert } from "@/components/ui/Alert";
 import { ScanForm } from "./ScanForm";
+import { Reveal } from "@/components/motion/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -56,11 +57,13 @@ export default async function OperatorScansPage() {
         title="Record Scan"
         description="Log a checkpoint scan. The transaction, status sequence checks, and hub authorizations are strictly validated by PostgreSQL database triggers and RLS policies."
       />
-      <ScanForm
-        staffName={staff.full_name}
-        hubCode={hub?.hub_code || "UNKNOWN"}
-        hubName={hub?.hub_name || "Unknown Hub"}
-      />
+      <Reveal>
+        <ScanForm
+          staffName={staff.full_name}
+          hubCode={hub?.hub_code || "UNKNOWN"}
+          hubName={hub?.hub_name || "Unknown Hub"}
+        />
+      </Reveal>
     </PageContainer>
   );
 }

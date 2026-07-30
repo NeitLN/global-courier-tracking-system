@@ -4,11 +4,12 @@ import { signIn } from "@/app/auth/actions";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Reveal } from "@/components/motion/Reveal";
 
 export default function LoginPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm space-y-6">
+      <Reveal className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Truck className="size-5" aria-hidden="true" />
@@ -45,7 +46,7 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-      </div>
+      </Reveal>
     </main>
   );
 }

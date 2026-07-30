@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Skeleton } from "./Skeleton";
+import { FadeSwap } from "./FadeSwap";
+import { CountUp } from "@/components/motion/CountUp";
 
 export interface KpiTrend {
   direction: "up" | "down";
@@ -37,17 +39,15 @@ export function KpiCardShell({
   const TrendIcon = trend?.direction === "down" ? TrendingDown : TrendingUp;
 
   return (
-    <div className={cn("rounded-lg border border-border bg-card p-4", className)}>
+    <div className={cn("card-interactive rounded-lg border border-border bg-card p-4", className)}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-label">{label}</p>
         {icon && <span className="text-muted-foreground">{icon}</span>}
       </div>
 
-      {isLoading ? (
-        <Skeleton className="mt-2 h-8 w-24" />
-      ) : (
-        <p className="text-kpi-value mt-1">{value ?? "—"}</p>
-      )}
+      <FadeSwap loading={isLoading} skeleton={<Skeleton className="mt-2 h-8 w-24" />} className="mt-1">
+        <p className="text-kpi-value">{typeof value === "number" ? <CountUp value={value} /> : (value ?? "—")}</p>
+      </FadeSwap>
 
       {supportingText && !isLoading && <p className="text-caption mt-1">{supportingText}</p>}
 

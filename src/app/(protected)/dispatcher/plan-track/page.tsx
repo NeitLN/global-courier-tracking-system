@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PlanningBoard } from "./PlanningBoard";
+import { Reveal } from "@/components/motion/Reveal";
 
 interface PageProps {
   searchParams: Promise<{
@@ -79,13 +80,15 @@ export default async function PlanTrackPage({ searchParams }: PageProps) {
         description="Assign unassigned shipments to scheduled trips departing from transit hubs."
       />
 
-      <PlanningBoard
-        hubs={hubs || []}
-        initialHubId={activeHubId}
-        unassignedPackages={unassignedPackages}
-        trips={trips || []}
-        assignedLegs={assignedLegs}
-      />
+      <Reveal>
+        <PlanningBoard
+          hubs={hubs || []}
+          initialHubId={activeHubId}
+          unassignedPackages={unassignedPackages}
+          trips={trips || []}
+          assignedLegs={assignedLegs}
+        />
+      </Reveal>
     </PageContainer>
   );
 }

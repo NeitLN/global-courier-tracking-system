@@ -35,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "focus-ring inline-flex items-center justify-center rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          "focus-ring inline-flex items-center justify-center rounded-md font-medium transition-[background-color,color,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
           VARIANT_CLASSES[variant],
           SIZE_CLASSES[size],
           className,
@@ -44,7 +44,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={isLoading || undefined}
         {...props}
       >
-        {isLoading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+        {isLoading && (
+          <Loader2
+            className="size-4 [animation:spin_1s_linear_infinite,fade-in-scale_var(--duration-base)_var(--ease-standard)]"
+            aria-hidden="true"
+          />
+        )}
         {children}
       </button>
     );

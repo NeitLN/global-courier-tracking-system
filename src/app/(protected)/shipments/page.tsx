@@ -10,6 +10,7 @@ import { FilterBar } from "@/components/ui/FilterBar";
 import { StatusBadge, isPackageStatus, PACKAGE_STATUSES } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { formatFee } from "@/lib/courier/format";
+import { Reveal } from "@/components/motion/Reveal";
 
 type Shipment = { package_id: number; tracking_no: string; sender_id: number; receiver_id: number; service_id: number; weight_kg: number; shipping_fee: number | null; current_status: string; origin_hub_id: number; dest_hub_id: number };
 type Service = { service_id: number; service_name: string };
@@ -52,19 +53,21 @@ export default async function ShipmentsPage({ searchParams }: { searchParams: Pr
       {error && <Alert tone="danger" title="Shipments unavailable">The database request was rejected or could not be completed.</Alert>}
       {(serviceResponse.error || hubResponse.error) && <Alert tone="warning" title="Reference labels unavailable">Some service or hub names could not be loaded. Existing database IDs are shown instead.</Alert>}
       {!error && (shipments.length === 0 ? <EmptyState icon={Package} title="No shipments found" description="No real shipment records match the current scope and filters." /> : (
-        <DataTableShell columns={["Tracking", "Role", "Status", "Service", "Route", "Weight", "Fee"]} caption="Shipment list">
-          {shipments.map((shipment) => (
-            <tr key={shipment.package_id}>
-              <td className="px-3 py-3"><Link href={`/shipments/${encodeURIComponent(shipment.tracking_no)}`} className="font-medium text-primary hover:underline">{shipment.tracking_no}</Link></td>
-              <td className="px-3 py-3">{auth.customerId === shipment.sender_id ? "Sender" : auth.customerId === shipment.receiver_id ? "Receiver" : "Operational"}</td>
-              <td className="px-3 py-3">{isPackageStatus(shipment.current_status) ? <StatusBadge status={shipment.current_status} /> : shipment.current_status}</td>
-              <td className="px-3 py-3">{serviceMap.get(shipment.service_id) ?? `Service ${shipment.service_id}`}</td>
-              <td className="px-3 py-3">{hubMap.get(shipment.origin_hub_id) ?? shipment.origin_hub_id} → {hubMap.get(shipment.dest_hub_id) ?? shipment.dest_hub_id}</td>
-              <td className="px-3 py-3">{shipment.weight_kg} kg</td>
-              <td className="px-3 py-3">{formatFee(shipment.shipping_fee)}</td>
-            </tr>
-          ))}
-        </DataTableShell>
+        <Reveal>
+          <DataTableShell columns={["Tracking", "Role", "Status", "Service", "Route", "Weight", "Fee"]} caption="Shipment list">
+            {shipments.map((shipment) => (
+              <tr key={shipment.package_id} className="transition-colors duration-150 hover:bg-muted/40">
+                <td className="px-3 py-3"><Link href={`/shipments/${encodeURIComponent(shipment.tracking_no)}`} className="font-medium text-primary hover:underline">{shipment.tracking_no}</Link></td>
+                <td className="px-3 py-3">{auth.customerId === shipment.sender_id ? "Sender" : auth.customerId === shipment.receiver_id ? "Receiver" : "Operational"}</td>
+                <td className="px-3 py-3">{isPackageStatus(shipment.current_status) ? <StatusBadge status={shipment.current_status} /> : shipment.current_status}</td>
+                <td className="px-3 py-3">{serviceMap.get(shipment.service_id) ?? `Service ${shipment.service_id}`}</td>
+                <td className="px-3 py-3">{hubMap.get(shipment.origin_hub_id) ?? shipment.origin_hub_id} → {hubMap.get(shipment.dest_hub_id) ?? shipment.dest_hub_id}</td>
+                <td className="px-3 py-3">{shipment.weight_kg} kg</td>
+                <td className="px-3 py-3">{formatFee(shipment.shipping_fee)}</td>
+              </tr>
+            ))}
+          </DataTableShell>
+        </Reveal>
       ))}
     </PageContainer>
   );

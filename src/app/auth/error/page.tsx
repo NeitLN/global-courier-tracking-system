@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import { Reveal } from "@/components/motion/Reveal";
 
 type SearchParams = Promise<{
   message?: string | string[];
@@ -20,14 +21,14 @@ export default async function AuthErrorPage(props: { searchParams: SearchParams 
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+      <Reveal className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
         <AlertTriangle className="mx-auto size-8 text-danger" aria-hidden="true" />
         <h1 className="text-page-title">Authentication error</h1>
         <p className="text-body text-muted-foreground">{message}</p>
         <Link href="/login" className="font-medium text-primary hover:underline">
           Return to login
         </Link>
-      </div>
+      </Reveal>
     </main>
   );
 }

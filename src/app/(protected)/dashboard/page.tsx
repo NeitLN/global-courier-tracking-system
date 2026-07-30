@@ -13,6 +13,8 @@ import { DataTableShell } from "@/components/ui/DataTableShell";
 import { StatusBadge, isPackageStatus } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { formatDateTime } from "@/lib/courier/format";
+import { StaggerList, StaggerItem } from "@/components/motion/StaggerList";
+import { Reveal } from "@/components/motion/Reveal";
 
 const ROLE_DESCRIPTIONS: Record<(typeof APP_ROLES)[number], string> = {
   CUSTOMER: "Track and manage packages you send or receive.",
@@ -46,19 +48,21 @@ export default async function DashboardPage() {
         {summaryResponse.error || !summary ? (
           <Alert tone="danger" title="Dashboard summary unavailable">The customer-scoped summary RPC did not return data. No KPI values are being substituted.</Alert>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCardShell label="Active shipments" value={summary.active_shipments} supportingText="Not delivered or returned" icon={<PackageOpen className="size-4" />} />
-            <KpiCardShell label="Delivered" value={summary.delivered_shipments} icon={<PackageCheck className="size-4" />} />
-            <KpiCardShell label="Returned" value={summary.returned_shipments} icon={<PackageX className="size-4" />} />
-            <KpiCardShell label="Latest shipment update" value={summary.latest_update ? formatDateTime(summary.latest_update) : "—"} supportingText={summary.latest_update ? "Across your shipments" : "No tracking events yet"} icon={<Clock className="size-4" />} />
-          </div>
+          <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StaggerItem><KpiCardShell label="Active shipments" value={summary.active_shipments} supportingText="Not delivered or returned" icon={<PackageOpen className="size-4" />} /></StaggerItem>
+            <StaggerItem><KpiCardShell label="Delivered" value={summary.delivered_shipments} icon={<PackageCheck className="size-4" />} /></StaggerItem>
+            <StaggerItem><KpiCardShell label="Returned" value={summary.returned_shipments} icon={<PackageX className="size-4" />} /></StaggerItem>
+            <StaggerItem><KpiCardShell label="Latest shipment update" value={summary.latest_update ? formatDateTime(summary.latest_update) : "—"} supportingText={summary.latest_update ? "Across your shipments" : "No tracking events yet"} icon={<Clock className="size-4" />} /></StaggerItem>
+          </StaggerList>
         )}
         {shipmentResponse.error ? (
           <Alert tone="danger" title="Recent shipments unavailable">The database could not load the recent shipment list.</Alert>
         ) : shipments.length === 0 ? (
           <EmptyState title="No shipments yet" description="Register a shipment or wait until another customer sends one to you." />
         ) : (
-          <DataTableShell columns={["Tracking", "Relationship", "Status"]} caption="Recent customer shipments">{shipments.map((shipment) => <tr key={shipment.package_id}><td className="px-3 py-3"><Link className="font-medium text-primary hover:underline" href={`/shipments/${shipment.tracking_no}`}>{shipment.tracking_no}</Link></td><td className="px-3 py-3">{shipment.sender_id === auth.customerId ? "Sender" : "Receiver"}</td><td className="px-3 py-3">{isPackageStatus(shipment.current_status) ? <StatusBadge status={shipment.current_status} /> : shipment.current_status}</td></tr>)}</DataTableShell>
+          <Reveal>
+            <DataTableShell columns={["Tracking", "Relationship", "Status"]} caption="Recent customer shipments">{shipments.map((shipment) => <tr key={shipment.package_id} className="transition-colors duration-150 hover:bg-muted/40"><td className="px-3 py-3"><Link className="font-medium text-primary hover:underline" href={`/shipments/${shipment.tracking_no}`}>{shipment.tracking_no}</Link></td><td className="px-3 py-3">{shipment.sender_id === auth.customerId ? "Sender" : "Receiver"}</td><td className="px-3 py-3">{isPackageStatus(shipment.current_status) ? <StatusBadge status={shipment.current_status} /> : shipment.current_status}</td></tr>)}</DataTableShell>
+          </Reveal>
         )}
         <p className="text-caption">When available, all figures are returned by a customer-scoped database RPC. Signed in as {ROLE_LABELS[auth.appRole]}.</p>
       </PageContainer>
@@ -116,84 +120,76 @@ export default async function DashboardPage() {
           </Alert>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-          <KpiCardShell label="Current Hub Inventory" value={inventoryCount} supportingText="Packages held at your hub" icon={<PackageOpen className="size-4" />} />
-          <KpiCardShell label="Historical Scans" value={scanCount} supportingText="Total checkpoint events recorded" icon={<BarChart3 className="size-4" />} />
-          <KpiCardShell label="Recent Hub Delivery Runs" value={deliveryAttempts.length} supportingText="Last local delivery attempts" icon={<Clock className="size-4" />} />
-        </div>
+        <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <StaggerItem><KpiCardShell label="Current Hub Inventory" value={inventoryCount} supportingText="Packages held at your hub" icon={<PackageOpen className="size-4" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Historical Scans" value={scanCount} supportingText="Total checkpoint events recorded" icon={<BarChart3 className="size-4" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Recent Hub Delivery Runs" value={deliveryAttempts.length} supportingText="Last local delivery attempts" icon={<Clock className="size-4" />} /></StaggerItem>
+        </StaggerList>
 
         {/* Shortcuts cards */}
         {shortcuts.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
             {shortcuts.map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.label} href={item.href}>
-                  <Card className="h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
-                    <CardContent className="flex items-center gap-3 py-4">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                        <Icon className="size-5" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{item.label}</p>
-                        <p className="text-caption">Open operational view</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <StaggerItem key={item.label}>
+                  <Link href={item.href}>
+                    <Card className="card-interactive h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
+                      <CardContent className="flex items-center gap-3 py-4">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                          <Icon className="size-5" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{item.label}</p>
+                          <p className="text-caption">Open operational view</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerList>
         )}
 
         {/* Recent Attempts Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Delivery Attempts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {deliveryAttempts.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50 text-caption font-medium">
-                      <th className="p-3">Tracking No</th>
-                      <th className="p-3">Driver</th>
-                      <th className="p-3">Outcome</th>
-                      <th className="p-3">Time</th>
+        <Reveal>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Delivery Attempts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {deliveryAttempts.length > 0 ? (
+                <DataTableShell columns={["Tracking No", "Driver", "Outcome", "Time"]} caption="Recent delivery attempts">
+                  {((deliveryAttempts || []) as Array<{
+                    attempt_id: number;
+                    tracking_no: string;
+                    driver_name: string;
+                    outcome: string;
+                    attempt_time: string;
+                  }>).map((da) => (
+                    <tr key={da.attempt_id} className="transition-colors duration-150 hover:bg-muted/40">
+                      <td className="px-3 py-3 font-mono font-medium text-foreground">{da.tracking_no}</td>
+                      <td className="px-3 py-3 text-foreground">{da.driver_name}</td>
+                      <td className="px-3 py-3">
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                          da.outcome === "SUCCESS"
+                            ? "bg-success-soft text-success-soft-foreground"
+                            : "bg-danger-soft text-danger-soft-foreground"
+                        }`}>
+                          {da.outcome}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-muted-foreground">{new Date(da.attempt_time).toLocaleString()}</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {((deliveryAttempts || []) as Array<{
-                      attempt_id: number;
-                      tracking_no: string;
-                      driver_name: string;
-                      outcome: string;
-                      attempt_time: string;
-                    }>).map((da) => (
-                      <tr key={da.attempt_id} className="hover:bg-muted/20">
-                        <td className="p-3 font-mono font-medium text-foreground">{da.tracking_no}</td>
-                        <td className="p-3 text-foreground">{da.driver_name}</td>
-                        <td className="p-3">
-                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
-                            da.outcome === "SUCCESS"
-                              ? "bg-success-soft text-success-soft-foreground"
-                              : "bg-danger-soft text-danger-soft-foreground"
-                          }`}>
-                            {da.outcome}
-                          </span>
-                        </td>
-                        <td className="p-3 text-muted-foreground">{new Date(da.attempt_time).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <EmptyState icon={Clock} title="No local attempts logged" description="No local delivery attempt scans have been recorded at your hub." />
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </DataTableShell>
+              ) : (
+                <EmptyState icon={Clock} title="No local attempts logged" description="No local delivery attempt scans have been recorded at your hub." />
+              )}
+            </CardContent>
+          </Card>
+        </Reveal>
         <p className="text-caption">Signed in as {ROLE_LABELS[auth.appRole]}.</p>
       </PageContainer>
     );
@@ -229,81 +225,72 @@ export default async function DashboardPage() {
           </Alert>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <KpiCardShell label="Scheduled Trips" value={tripsCount} supportingText="Network-wide runs" icon={<Truck className="size-4" />} />
-          <KpiCardShell label="Active Drivers" value={driversCount} supportingText="Deployed road crew" icon={<UserRound className="size-4" />} />
-          <KpiCardShell label="Fleet Vehicles" value={vehiclesCount} supportingText="Transit assets" icon={<Car className="size-4" />} />
-          <KpiCardShell label="Service Routes" value={routesCount} supportingText="Directed lines" icon={<Clock className="size-4" />} />
-        </div>
+        <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+          <StaggerItem><KpiCardShell label="Scheduled Trips" value={tripsCount} supportingText="Network-wide runs" icon={<Truck className="size-4" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Active Drivers" value={driversCount} supportingText="Deployed road crew" icon={<UserRound className="size-4" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Fleet Vehicles" value={vehiclesCount} supportingText="Transit assets" icon={<Car className="size-4" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Service Routes" value={routesCount} supportingText="Directed lines" icon={<Clock className="size-4" />} /></StaggerItem>
+        </StaggerList>
 
         {/* Shortcuts cards */}
         {shortcuts.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
             {shortcuts.map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.label} href={item.href}>
-                  <Card className="h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
-                    <CardContent className="flex items-center gap-3 py-4">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                        <Icon className="size-5" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{item.label}</p>
-                        <p className="text-caption">Schedule & assign manifest</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <StaggerItem key={item.label}>
+                  <Link href={item.href}>
+                    <Card className="card-interactive h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
+                      <CardContent className="flex items-center gap-3 py-4">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                          <Icon className="size-5" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{item.label}</p>
+                          <p className="text-caption">Schedule & assign manifest</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerList>
         )}
 
         {/* Trips table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Trips Manifest</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentTrips.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50 text-caption font-medium">
-                      <th className="p-3">Trip ID</th>
-                      <th className="p-3">Route</th>
-                      <th className="p-3">Driver</th>
-                      <th className="p-3">Vehicle</th>
-                      <th className="p-3">Departure</th>
+        <Reveal>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Trips Manifest</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentTrips.length > 0 ? (
+                <DataTableShell columns={["Trip ID", "Route", "Driver", "Vehicle", "Departure"]} caption="Recent trips manifest">
+                  {((recentTrips || []) as Array<{
+                    trip_id: number;
+                    origin_hub_code: string;
+                    dest_hub_code: string;
+                    mode: string;
+                    driver_name: string;
+                    vehicle_plate: string;
+                    depart: string;
+                  }>).map((t) => (
+                    <tr key={t.trip_id} className="transition-colors duration-150 hover:bg-muted/40">
+                      <td className="px-3 py-3 font-mono font-medium text-foreground">#{t.trip_id}</td>
+                      <td className="px-3 py-3 font-medium text-foreground">{t.origin_hub_code} → {t.dest_hub_code}</td>
+                      <td className="px-3 py-3 text-foreground">{t.driver_name}</td>
+                      <td className="px-3 py-3 font-mono text-muted-foreground">{t.vehicle_plate}</td>
+                      <td className="px-3 py-3 text-foreground">{new Date(t.depart).toLocaleString()}</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {((recentTrips || []) as Array<{
-                      trip_id: number;
-                      origin_hub_code: string;
-                      dest_hub_code: string;
-                      mode: string;
-                      driver_name: string;
-                      vehicle_plate: string;
-                      depart: string;
-                    }>).map((t) => (
-                      <tr key={t.trip_id} className="hover:bg-muted/20">
-                        <td className="p-3 font-mono font-medium text-foreground">#{t.trip_id}</td>
-                        <td className="p-3 font-medium text-foreground">{t.origin_hub_code} → {t.dest_hub_code}</td>
-                        <td className="p-3 text-foreground">{t.driver_name}</td>
-                        <td className="p-3 font-mono text-muted-foreground">{t.vehicle_plate}</td>
-                        <td className="p-3 text-foreground">{new Date(t.depart).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <EmptyState icon={Truck} title="No trips scheduled" description="Use the trips manager module to schedule the first network run." />
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </DataTableShell>
+              ) : (
+                <EmptyState icon={Truck} title="No trips scheduled" description="Use the trips manager module to schedule the first network run." />
+              )}
+            </CardContent>
+          </Card>
+        </Reveal>
         <p className="text-caption">Signed in as {ROLE_LABELS[auth.appRole]}.</p>
       </PageContainer>
     );
@@ -372,71 +359,63 @@ export default async function DashboardPage() {
           </Alert>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <KpiCardShell label="SLA Compliance Rate" value={`${pctMet}%`} supportingText={`${metSla} of ${totalSla} shipments met`} icon={<Gauge className="size-4 text-success" />} />
-          <KpiCardShell label="Avg Hub Latency" value={`${avgLatency.toFixed(1)}h`} supportingText="Across all transit hubs" icon={<Clock className="size-4" />} />
-          <KpiCardShell label="Top Deployed Driver" value={topPerformer} supportingText="Highest successful outcome rate" icon={<UserRound className="size-4 text-primary" />} />
-          <KpiCardShell label="Hub Count Audited" value={latencyRecords.length} supportingText="Active checkpoints" icon={<BarChart3 className="size-4" />} />
-        </div>
+        <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+          <StaggerItem><KpiCardShell label="SLA Compliance Rate" value={`${pctMet}%`} supportingText={`${metSla} of ${totalSla} shipments met`} icon={<Gauge className="size-4 text-success" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Avg Hub Latency" value={`${avgLatency.toFixed(1)}h`} supportingText="Across all transit hubs" icon={<Clock className="size-4" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Top Deployed Driver" value={topPerformer} supportingText="Highest successful outcome rate" icon={<UserRound className="size-4 text-primary" />} /></StaggerItem>
+          <StaggerItem><KpiCardShell label="Hub Count Audited" value={latencyRecords.length} supportingText="Active checkpoints" icon={<BarChart3 className="size-4" />} /></StaggerItem>
+        </StaggerList>
 
         {/* Shortcuts cards */}
         {shortcuts.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+          <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
             {shortcuts.map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.label} href={item.href}>
-                  <Card className="h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
-                    <CardContent className="flex items-center gap-3 py-4">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                        <Icon className="size-5" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{item.label}</p>
-                        <p className="text-caption">Analyze network benchmarks</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <StaggerItem key={item.label}>
+                  <Link href={item.href}>
+                    <Card className="card-interactive h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
+                      <CardContent className="flex items-center gap-3 py-4">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                          <Icon className="size-5" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{item.label}</p>
+                          <p className="text-caption">Analyze network benchmarks</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerList>
         )}
 
         {/* SLA Breach Warning Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent SLA Breaches</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {slaRecords.filter((r) => r.compliance_status === "BREACHED").length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50 text-caption font-medium">
-                      <th className="p-3">Tracking No</th>
-                      <th className="p-3">Service Type</th>
-                      <th className="p-3 text-right">Elapsed Time</th>
-                      <th className="p-3 text-right pr-6">SLA Limit</th>
+        <Reveal>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent SLA Breaches</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {slaRecords.filter((r) => r.compliance_status === "BREACHED").length > 0 ? (
+                <DataTableShell columns={["Tracking No", "Service Type", "Elapsed Time", "SLA Limit"]} caption="Recent SLA breaches">
+                  {slaRecords.filter((r) => r.compliance_status === "BREACHED").slice(0, 5).map((r) => (
+                    <tr key={r.package_id} className="transition-colors duration-150 hover:bg-muted/40">
+                      <td className="px-3 py-3 font-mono font-medium text-danger">{r.tracking_no}</td>
+                      <td className="px-3 py-3 text-foreground">{r.service_name}</td>
+                      <td className="px-3 py-3 text-right font-mono text-danger font-semibold">{r.elapsed_hours}h</td>
+                      <td className="px-3 py-3 text-right font-mono text-muted-foreground">{r.sla_hours}h</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {slaRecords.filter((r) => r.compliance_status === "BREACHED").slice(0, 5).map((r) => (
-                      <tr key={r.package_id} className="hover:bg-muted/20">
-                        <td className="p-3 font-mono font-medium text-danger">{r.tracking_no}</td>
-                        <td className="p-3 text-foreground">{r.service_name}</td>
-                        <td className="p-3 text-right font-mono text-danger font-semibold">{r.elapsed_hours}h</td>
-                        <td className="p-3 text-right pr-6 font-mono text-muted-foreground">{r.sla_hours}h</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <EmptyState icon={ShieldAlert} title="Perfect SLA records!" description="Excellent! No SLA compliance breaches are currently logged in the system." />
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </DataTableShell>
+              ) : (
+                <EmptyState icon={ShieldAlert} title="Perfect SLA records!" description="Excellent! No SLA compliance breaches are currently logged in the system." />
+              )}
+            </CardContent>
+          </Card>
+        </Reveal>
         <p className="text-caption">Signed in as {ROLE_LABELS[auth.appRole]}.</p>
       </PageContainer>
     );
@@ -445,7 +424,30 @@ export default async function DashboardPage() {
   return (
     <PageContainer>
       <PageHeader title={`Welcome back${auth.displayName ? `, ${auth.displayName}` : ""}`} description={ROLE_DESCRIPTIONS[auth.appRole]} />
-      {shortcuts.length > 0 && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shortcuts.map((item) => { const Icon = item.icon; return <Link key={item.label} href={item.href}><Card className="h-full transition-colors hover:border-primary/40 hover:bg-muted/40"><CardContent className="flex items-center gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"><Icon className="size-5" /></span><div><p className="text-sm font-medium text-foreground">{item.label}</p><p className="text-caption">{item.children ? `${item.children.length} sections` : "Open module"}</p></div></CardContent></Card></Link>; })}</div>}
+      {shortcuts.length > 0 && (
+        <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {shortcuts.map((item) => {
+            const Icon = item.icon;
+            return (
+              <StaggerItem key={item.label}>
+                <Link href={item.href}>
+                  <Card className="card-interactive h-full transition-colors hover:border-primary/40 hover:bg-muted/40">
+                    <CardContent className="flex items-center gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Icon className="size-5" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{item.label}</p>
+                        <p className="text-caption">{item.children ? `${item.children.length} sections` : "Open module"}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </StaggerItem>
+            );
+          })}
+        </StaggerList>
+      )}
       <p className="text-caption">Signed in as {ROLE_LABELS[auth.appRole]}.</p>
     </PageContainer>
   );

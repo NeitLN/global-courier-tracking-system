@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatDateTime } from "@/lib/courier/format";
 import { courierErrorMessage } from "@/lib/courier/errors";
+import { DataTableShell } from "@/components/ui/DataTableShell";
+import { Reveal } from "@/components/motion/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -225,40 +227,30 @@ export default async function OperatorInventoryPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <table className="w-full border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 font-medium text-muted-foreground">
-                <th className="p-4">Tracking Number</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Service</th>
-                <th className="p-4">Weight (kg)</th>
-                <th className="p-4">Destination</th>
-                <th className="p-4">Latest Scan</th>
-                <th className="p-4">Held Since</th>
+        <Reveal>
+          <DataTableShell
+            columns={["Tracking Number", "Status", "Service", "Weight (kg)", "Destination", "Latest Scan", "Held Since"]}
+            caption="Current hub inventory"
+          >
+            {filteredInventory.map((item) => (
+              <tr key={item.package_id} className="transition-colors duration-150 hover:bg-muted/40">
+                <td className="px-3 py-3 font-mono font-medium text-foreground">{item.tracking_no}</td>
+                <td className="px-3 py-3">
+                  <Badge tone={item.current_status === "OUT_FOR_DELIVERY" ? "warning" : "primary"}>
+                    {item.current_status}
+                  </Badge>
+                </td>
+                <td className="px-3 py-3">{item.serviceName}</td>
+                <td className="px-3 py-3">{item.weight} kg</td>
+                <td className="px-3 py-3">
+                  <span className="font-semibold text-foreground">{item.destHubCode}</span> - {item.destHubName}
+                </td>
+                <td className="px-3 py-3 text-muted-foreground">{formatDateTime(item.latest_event_time)}</td>
+                <td className="px-3 py-3 text-muted-foreground font-medium">{getRelativeTimeString(item.latest_event_time)}</td>
               </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredInventory.map((item) => (
-                <tr key={item.package_id} className="hover:bg-muted/30">
-                  <td className="p-4 font-mono font-medium text-foreground">{item.tracking_no}</td>
-                  <td className="p-4">
-                    <Badge tone={item.current_status === "OUT_FOR_DELIVERY" ? "warning" : "primary"}>
-                      {item.current_status}
-                    </Badge>
-                  </td>
-                  <td className="p-4">{item.serviceName}</td>
-                  <td className="p-4">{item.weight} kg</td>
-                  <td className="p-4">
-                    <span className="font-semibold text-foreground">{item.destHubCode}</span> - {item.destHubName}
-                  </td>
-                  <td className="p-4 text-muted-foreground">{formatDateTime(item.latest_event_time)}</td>
-                  <td className="p-4 text-muted-foreground font-medium">{getRelativeTimeString(item.latest_event_time)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </DataTableShell>
+        </Reveal>
       )}
     </PageContainer>
   );

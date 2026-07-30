@@ -8,6 +8,8 @@ import { Alert } from "@/components/ui/Alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatusBadge, isPackageStatus } from "@/components/ui/StatusBadge";
 import { formatDateTime, formatInterval, formatFee } from "@/lib/courier/format";
+import { Reveal } from "@/components/motion/Reveal";
+import { StaggerList, StaggerItem } from "@/components/motion/StaggerList";
 
 type Shipment = { package_id: number; tracking_no: string; sender_id: number; receiver_id: number; service_id: number; weight_kg: number; length_cm: number | null; width_cm: number | null; height_cm: number | null; shipping_fee: number | null; origin_hub_id: number; dest_hub_id: number; current_status: string };
 type ChainEvent = { event_id: number; event_time: string; hub_id: number; status_code: string; elapsed_interval: string | null };
@@ -45,30 +47,32 @@ export default async function ShipmentDetailPage({ params, searchParams }: { par
       {created === "1" && <Alert tone="success" title="Shipment registered">The database returned tracking number {shipment.tracking_no}, calculated a fee of {formatFee(shipment.shipping_fee)}, and created the initial REGISTERED event.</Alert>}
       {chainError && <Alert tone="danger" title="Timeline unavailable">Chain-of-custody data could not be loaded.</Alert>}
 
-      <Card>
-        <CardHeader><CardTitle>Overview</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div><p className="text-label">Status</p>{isPackageStatus(shipment.current_status) ? <StatusBadge status={shipment.current_status} /> : <p>{shipment.current_status}</p>}</div>
-          <div><p className="text-label">Service</p><p className="text-body">{serviceName}</p></div>
-          <div><p className="text-label">Weight</p><p className="text-body">{shipment.weight_kg} kg</p></div>
-          <div><p className="text-label">Database fee</p><p className="text-body">{formatFee(shipment.shipping_fee)}</p></div>
-          <div className="sm:col-span-2"><p className="text-label">Origin</p><p className="text-body">{hubMap.get(shipment.origin_hub_id) ?? shipment.origin_hub_id}</p></div>
-          <div className="sm:col-span-2"><p className="text-label">Destination</p><p className="text-body">{hubMap.get(shipment.dest_hub_id) ?? shipment.dest_hub_id}</p></div>
-          {(shipment.length_cm || shipment.width_cm || shipment.height_cm) && <div className="sm:col-span-2 lg:col-span-4"><p className="text-label">Dimensions</p><p className="text-body">{shipment.length_cm ?? "—"} × {shipment.width_cm ?? "—"} × {shipment.height_cm ?? "—"} cm</p></div>}
-        </CardContent>
-      </Card>
+      <Reveal>
+        <Card>
+          <CardHeader><CardTitle>Overview</CardTitle></CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div><p className="text-label">Status</p>{isPackageStatus(shipment.current_status) ? <StatusBadge status={shipment.current_status} /> : <p>{shipment.current_status}</p>}</div>
+            <div><p className="text-label">Service</p><p className="text-body">{serviceName}</p></div>
+            <div><p className="text-label">Weight</p><p className="text-body">{shipment.weight_kg} kg</p></div>
+            <div><p className="text-label">Database fee</p><p className="text-body">{formatFee(shipment.shipping_fee)}</p></div>
+            <div className="sm:col-span-2"><p className="text-label">Origin</p><p className="text-body">{hubMap.get(shipment.origin_hub_id) ?? shipment.origin_hub_id}</p></div>
+            <div className="sm:col-span-2"><p className="text-label">Destination</p><p className="text-body">{hubMap.get(shipment.dest_hub_id) ?? shipment.dest_hub_id}</p></div>
+            {(shipment.length_cm || shipment.width_cm || shipment.height_cm) && <div className="sm:col-span-2 lg:col-span-4"><p className="text-label">Dimensions</p><p className="text-body">{shipment.length_cm ?? "—"} × {shipment.width_cm ?? "—"} × {shipment.height_cm ?? "—"} cm</p></div>}
+          </CardContent>
+        </Card>
+      </Reveal>
 
-      {events.length > 0 && <Card>
+      {events.length > 0 && <Reveal delay={0.06}><Card>
         <CardHeader><CardTitle>Timeline and chain of custody</CardTitle></CardHeader>
         <CardContent>
           <p className="text-caption mb-4">Inter-scan interval measures elapsed time between consecutive scans; it is not necessarily pure hub dwell time.</p>
-          <ol className="flex flex-col gap-4">{events.map((event, index) => <li key={event.event_id} className="flex gap-3"><span className={`mt-1 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${index === events.length - 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{index + 1}</span><div><div className="flex flex-wrap items-center gap-2">{isPackageStatus(event.status_code) ? <StatusBadge status={event.status_code} /> : event.status_code}{index === events.length - 1 && <span className="text-caption">Current event</span>}</div><p className="text-body mt-1">{hubMap.get(event.hub_id) ?? `Hub ${event.hub_id}`}</p><p className="text-caption">{formatDateTime(event.event_time)} · Inter-scan interval: {formatInterval(event.elapsed_interval)}</p></div></li>)}</ol>
+          <StaggerList as="ol" className="flex flex-col gap-4">{events.map((event, index) => <StaggerItem as="li" key={event.event_id} className="flex gap-3"><span className={`mt-1 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${index === events.length - 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{index + 1}</span><div><div className="flex flex-wrap items-center gap-2">{isPackageStatus(event.status_code) ? <StatusBadge status={event.status_code} /> : event.status_code}{index === events.length - 1 && <span className="text-caption">Current event</span>}</div><p className="text-body mt-1">{hubMap.get(event.hub_id) ?? `Hub ${event.hub_id}`}</p><p className="text-caption">{formatDateTime(event.event_time)} · Inter-scan interval: {formatInterval(event.elapsed_interval)}</p></div></StaggerItem>)}</StaggerList>
         </CardContent>
-      </Card>}
+      </Card></Reveal>}
 
-      {((legs as Leg[] | null)?.length ?? 0) > 0 && <Card><CardHeader><CardTitle>Trip legs</CardTitle></CardHeader><CardContent className="space-y-3">{(legs as Leg[]).map((leg, index) => <div key={`${leg.trip_id}-${leg.package_id}`} className="rounded-md border border-border p-3 text-sm"><p className="font-medium">Leg {index + 1} · Trip {leg.trip_id}</p><p className="text-caption">Loaded: {formatDateTime(leg.loaded_at)} · Unloaded: {formatDateTime(leg.unloaded_at)}</p></div>)}</CardContent></Card>}
+      {((legs as Leg[] | null)?.length ?? 0) > 0 && <Reveal delay={0.1}><Card><CardHeader><CardTitle>Trip legs</CardTitle></CardHeader><CardContent><StaggerList className="space-y-3">{(legs as Leg[]).map((leg, index) => <StaggerItem key={`${leg.trip_id}-${leg.package_id}`} className="rounded-md border border-border p-3 text-sm transition-colors duration-150 hover:bg-muted/40"><p className="font-medium">Leg {index + 1} · Trip {leg.trip_id}</p><p className="text-caption">Loaded: {formatDateTime(leg.loaded_at)} · Unloaded: {formatDateTime(leg.unloaded_at)}</p></StaggerItem>)}</StaggerList></CardContent></Card></Reveal>}
 
-      {((attempts as Attempt[] | null)?.length ?? 0) > 0 && <Card><CardHeader><CardTitle>Delivery attempts</CardTitle></CardHeader><CardContent className="space-y-3">{(attempts as Attempt[]).map((attempt) => <div key={attempt.attempt_id} className="rounded-md border border-border p-3 text-sm"><p className="font-medium">{attempt.outcome}</p><p className="text-caption">{formatDateTime(attempt.attempt_time)}{attempt.failure_reason ? ` · ${attempt.failure_reason}` : ""}</p></div>)}</CardContent></Card>}
+      {((attempts as Attempt[] | null)?.length ?? 0) > 0 && <Reveal delay={0.14}><Card><CardHeader><CardTitle>Delivery attempts</CardTitle></CardHeader><CardContent><StaggerList className="space-y-3">{(attempts as Attempt[]).map((attempt) => <StaggerItem key={attempt.attempt_id} className="rounded-md border border-border p-3 text-sm transition-colors duration-150 hover:bg-muted/40"><p className="font-medium">{attempt.outcome}</p><p className="text-caption">{formatDateTime(attempt.attempt_time)}{attempt.failure_reason ? ` · ${attempt.failure_reason}` : ""}</p></StaggerItem>)}</StaggerList></CardContent></Card></Reveal>}
     </PageContainer>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, LogOut, User as UserIcon } from "lucide-react";
 import type { AppRole } from "@/lib/auth/roles";
 import { signOut } from "@/app/auth/actions";
@@ -56,47 +57,53 @@ export function UserMenu({ displayName, email, role }: UserMenuProps) {
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} aria-hidden="true" />
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          aria-label="Account menu"
-          className="absolute right-0 z-20 mt-2 w-56 rounded-md border border-border bg-card p-1 shadow-lg"
-        >
-          <div className="px-3 py-2">
-            <p className="truncate text-sm font-medium text-foreground">{label}</p>
-            {email && <p className="truncate text-caption">{email}</p>}
-            <RoleBadge role={role} className="mt-2" />
-          </div>
-          <div className="my-1 h-px bg-border" />
-          <Link
-            href="/profile"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="focus-ring block rounded-md px-3 py-2 text-sm hover:bg-muted"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            aria-label="Account menu"
+            className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-md border border-border bg-card p-1 shadow-lg"
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
           >
-            Profile
-          </Link>
-          <Link
-            href="/account"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="focus-ring block rounded-md px-3 py-2 text-sm hover:bg-muted"
-          >
-            Account
-          </Link>
-          <div className="my-1 h-px bg-border" />
-          <form action={signOut}>
-            <button
-              type="submit"
+            <div className="px-3 py-2">
+              <p className="truncate text-sm font-medium text-foreground">{label}</p>
+              {email && <p className="truncate text-caption">{email}</p>}
+              <RoleBadge role={role} className="mt-2" />
+            </div>
+            <div className="my-1 h-px bg-border" />
+            <Link
+              href="/profile"
               role="menuitem"
-              className="focus-ring flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-danger-soft"
+              onClick={() => setOpen(false)}
+              className="focus-ring block rounded-md px-3 py-2 text-sm hover:bg-muted"
             >
-              <LogOut className="size-4" aria-hidden="true" />
-              Sign out
-            </button>
-          </form>
-        </div>
-      )}
+              Profile
+            </Link>
+            <Link
+              href="/account"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="focus-ring block rounded-md px-3 py-2 text-sm hover:bg-muted"
+            >
+              Account
+            </Link>
+            <div className="my-1 h-px bg-border" />
+            <form action={signOut}>
+              <button
+                type="submit"
+                role="menuitem"
+                className="focus-ring flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-danger-soft"
+              >
+                <LogOut className="size-4" aria-hidden="true" />
+                Sign out
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

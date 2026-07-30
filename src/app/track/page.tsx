@@ -6,6 +6,8 @@ import { formatDateTime } from "@/lib/courier/format";
 import { StatusBadge, isPackageStatus } from "@/components/ui/StatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Reveal } from "@/components/motion/Reveal";
+import { StaggerList, StaggerItem } from "@/components/motion/StaggerList";
 
 export const dynamic = "force-dynamic";
 
@@ -65,30 +67,34 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
 
         {result && (
           <>
-            <Card>
-              <CardHeader><CardTitle>{result.tracking_no}</CardTitle></CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div><p className="text-label">Current status</p>{isPackageStatus(result.current_status) ? <StatusBadge status={result.current_status} /> : <p className="text-body">{result.current_status}</p>}</div>
-                <div><p className="text-label">Service type</p><p className="text-body">{result.service_type}</p></div>
-                <div><p className="text-label">Origin</p><p className="text-body">{result.origin_hub.name} ({result.origin_hub.code})</p></div>
-                <div><p className="text-label">Destination</p><p className="text-body">{result.destination_hub.name} ({result.destination_hub.code})</p></div>
-                <div className="sm:col-span-2"><p className="text-label">Latest update</p><p className="text-body">{formatDateTime(result.latest_update)}</p></div>
-              </CardContent>
-            </Card>
+            <Reveal>
+              <Card>
+                <CardHeader><CardTitle>{result.tracking_no}</CardTitle></CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                  <div><p className="text-label">Current status</p>{isPackageStatus(result.current_status) ? <StatusBadge status={result.current_status} /> : <p className="text-body">{result.current_status}</p>}</div>
+                  <div><p className="text-label">Service type</p><p className="text-body">{result.service_type}</p></div>
+                  <div><p className="text-label">Origin</p><p className="text-body">{result.origin_hub.name} ({result.origin_hub.code})</p></div>
+                  <div><p className="text-label">Destination</p><p className="text-body">{result.destination_hub.name} ({result.destination_hub.code})</p></div>
+                  <div className="sm:col-span-2"><p className="text-label">Latest update</p><p className="text-body">{formatDateTime(result.latest_update)}</p></div>
+                </CardContent>
+              </Card>
+            </Reveal>
 
-            <Card>
-              <CardHeader><CardTitle>Tracking timeline</CardTitle></CardHeader>
-              <CardContent>
-                <ol className="flex flex-col gap-4">
-                  {result.timeline.map((event) => (
-                    <li key={`${event.event_order}-${event.event_time}`} className="flex gap-3">
-                      <span className={`mt-1 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${event.is_current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{event.event_order}</span>
-                      <div className="min-w-0"><div className="flex flex-wrap items-center gap-2">{isPackageStatus(event.status) ? <StatusBadge status={event.status} /> : <span>{event.status}</span>}{event.is_current && <span className="text-caption">Current event</span>}</div><p className="text-body mt-1">{event.hub.name} ({event.hub.code})</p><p className="text-caption">{formatDateTime(event.event_time)}</p></div>
-                    </li>
-                  ))}
-                </ol>
-              </CardContent>
-            </Card>
+            <Reveal delay={0.08}>
+              <Card>
+                <CardHeader><CardTitle>Tracking timeline</CardTitle></CardHeader>
+                <CardContent>
+                  <StaggerList as="ol" className="flex flex-col gap-4">
+                    {result.timeline.map((event) => (
+                      <StaggerItem as="li" key={`${event.event_order}-${event.event_time}`} className="flex gap-3">
+                        <span className={`mt-1 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${event.is_current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{event.event_order}</span>
+                        <div className="min-w-0"><div className="flex flex-wrap items-center gap-2">{isPackageStatus(event.status) ? <StatusBadge status={event.status} /> : <span>{event.status}</span>}{event.is_current && <span className="text-caption">Current event</span>}</div><p className="text-body mt-1">{event.hub.name} ({event.hub.code})</p><p className="text-caption">{formatDateTime(event.event_time)}</p></div>
+                      </StaggerItem>
+                    ))}
+                  </StaggerList>
+                </CardContent>
+              </Card>
+            </Reveal>
           </>
         )}
       </div>

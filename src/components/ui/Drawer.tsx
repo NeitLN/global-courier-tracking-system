@@ -47,7 +47,7 @@ export function Drawer({ open, onClose, title, side = "left", children, classNam
       aria-labelledby={titleId}
       className={cn(
         "fixed inset-y-0 m-0 h-dvh w-72 max-w-[85vw] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground backdrop:bg-slate-950/50",
-        side === "left" ? "left-0 border-r" : "right-0 left-auto border-l",
+        side === "left" ? "left-0 border-r drawer-left" : "right-0 left-auto border-l drawer-right",
         className,
       )}
     >

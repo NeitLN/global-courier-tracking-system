@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search, Truck } from "lucide-react";
 import { getAuthContext } from "@/lib/auth/auth-context";
+import { Reveal } from "@/components/motion/Reveal";
 
 // This page's content genuinely depends on request-time auth state (signed
 // in vs. not), so it must not be statically prerendered at build time —
@@ -16,7 +17,7 @@ export default async function Home() {
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-background p-8">
-      <div className="flex flex-col items-center gap-3 text-center">
+      <Reveal className="flex flex-col items-center gap-3 text-center">
         <span className="flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Truck className="size-6" aria-hidden="true" />
         </span>
@@ -25,9 +26,9 @@ export default async function Home() {
           A role-based courier operations platform for registering, scanning, dispatching, and
           reporting on shipments across a hub network.
         </p>
-      </div>
+      </Reveal>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <Reveal delay={0.1} className="flex flex-wrap items-center justify-center gap-3">
         {isAuthenticated ? (
           <Link
             href={secondaryHref}
@@ -58,7 +59,7 @@ export default async function Home() {
             </Link>
           </>
         )}
-      </div>
+      </Reveal>
 
       <p className="text-caption">Customer tracking and package registration workflows are available.</p>
     </main>
