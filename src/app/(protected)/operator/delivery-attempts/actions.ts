@@ -5,16 +5,21 @@ import { getAuthContext } from "@/lib/auth/auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { courierErrorMessage } from "@/lib/courier/errors";
 
+import { randomUUID } from "crypto";
+
 export interface DeliveryAttemptResult {
   success: boolean;
   error?: string;
   data?: unknown;
+  requestId?: string;
 }
 
 export async function recordDeliveryAttempt(formData: FormData): Promise<DeliveryAttemptResult> {
   const auth = await getAuthContext();
+  const requestId = randomUUID();
+
   if (auth.status !== "active" || auth.appRole !== "HUB_OPERATOR") {
-    return { success: false, error: "Unauthorized: must be a Hub Operator." };
+    return { success: false, error: "Unauthorized: must be a Hub Operator.", requestId };
   }
 
   const trackingNo = (formData.get("tracking_no") as string)?.trim().toUpperCase();
@@ -25,16 +30,16 @@ export async function recordDeliveryAttempt(formData: FormData): Promise<Deliver
   const notes = (formData.get("notes") as string)?.trim() || null;
 
   if (!trackingNo) {
-    return { success: false, error: "Tracking number is required." };
+    return { success: false, error: "Tracking number is required.", requestId };
   }
   if (!driverIdStr) {
-    return { success: false, error: "Driver is required." };
+    return { success: false, error: "Driver is required.", requestId };
   }
   if (!attemptTimeStr) {
-    return { success: false, error: "Attempt time is required." };
+    return { success: false, error: "Attempt time is required.", requestId };
   }
   if (!outcome) {
-    return { success: false, error: "Outcome is required." };
+    return { success: false, error: "Outcome is required.", requestId };
   }
 
   const driverId = parseInt(driverIdStr, 10);
@@ -53,8 +58,20 @@ export async function recordDeliveryAttempt(formData: FormData): Promise<Deliver
   });
 
   if (error) {
-    return { success: false, error: courierErrorMessage(error.message) };
+    const errMsg = courierErrorMessage(error.message, "RECORD_DELIVERY_ATTEMPT", auth.userId);
+    return { success: false, error: errMsg, requestId };
   }
+
+  // Log successful operation
+  console.log(
+    JSON.stringify({
+      requestId,
+      userId: auth.userId,
+      operation: "RECORD_DELIVERY_ATTEMPT",
+      status: "SUCCESS",
+      timestamp: new Date().toISOString(),
+    })
+  );
 
   revalidatePath("/operator/delivery-attempts");
   revalidatePath("/operator/inventory");
@@ -62,6 +79,7 @@ export async function recordDeliveryAttempt(formData: FormData): Promise<Deliver
 
   return {
     success: true,
+    requestId,
     data: {
       trackingNo,
       driverId,

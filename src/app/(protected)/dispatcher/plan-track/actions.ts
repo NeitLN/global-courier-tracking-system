@@ -5,13 +5,17 @@ import { getAuthContext } from "@/lib/auth/auth-context";
 import { createClient } from "@/lib/supabase/server";
 import { courierErrorMessage } from "@/lib/courier/errors";
 
+import { randomUUID } from "crypto";
+
 export async function assignPackageToTripAction(formData: {
   tripId: number;
   packageId: number;
 }) {
   const auth = await getAuthContext();
+  const requestId = randomUUID();
+
   if (!auth || auth.appRole !== "DISPATCHER" || !auth.isActive) {
-    return { success: false, error: "Unauthorized: Active Dispatcher only" };
+    return { success: false, error: "Unauthorized: Active Dispatcher only", requestId };
   }
 
   const supabase = await createClient();
@@ -21,11 +25,23 @@ export async function assignPackageToTripAction(formData: {
   });
 
   if (error) {
-    return { success: false, error: courierErrorMessage(error.message) };
+    const errMsg = courierErrorMessage(error.message, "ASSIGN_PACKAGE_TO_TRIP", auth.userId);
+    return { success: false, error: errMsg, requestId };
   }
+
+  // Log successful operation
+  console.log(
+    JSON.stringify({
+      requestId,
+      userId: auth.userId,
+      operation: "ASSIGN_PACKAGE_TO_TRIP",
+      status: "SUCCESS",
+      timestamp: new Date().toISOString(),
+    })
+  );
 
   revalidatePath("/dispatcher/plan-track");
   revalidatePath("/dispatcher/trips");
 
-  return { success: true };
+  return { success: true, requestId };
 }

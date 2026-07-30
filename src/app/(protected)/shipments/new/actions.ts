@@ -5,6 +5,8 @@ import { requireRouteAccess } from "@/lib/auth/route-access";
 import { createClient } from "@/lib/supabase/server";
 import { courierErrorMessage } from "@/lib/courier/errors";
 
+import { randomUUID } from "crypto";
+
 function numeric(formData: FormData, name: string, required = true): number | null {
   const raw = String(formData.get(name) ?? "").trim();
   if (!raw) {
@@ -18,6 +20,8 @@ function numeric(formData: FormData, name: string, required = true): number | nu
 
 export async function registerShipment(formData: FormData) {
   const auth = await requireRouteAccess(["CUSTOMER"]);
+  const requestId = randomUUID();
+
   if (!auth.customerId) redirect("/account");
 
   const receiverEmail = String(formData.get("receiver_email") ?? "").trim();
@@ -36,18 +40,30 @@ export async function registerShipment(formData: FormData) {
       p_dest_hub_id: numeric(formData, "dest_hub_id")!,
     };
   } catch {
-    redirect(`/shipments/new?error=${encodeURIComponent("Enter valid numeric package measurements.")}`);
+    redirect(`/shipments/new?error=${encodeURIComponent("Enter valid numeric package measurements.")}&requestId=${requestId}`);
   }
 
   const response = await supabase.rpc("fn_register_package_by_receiver_email", args);
   if (response.error) {
-    redirect(`/shipments/new?error=${encodeURIComponent(courierErrorMessage(response.error.message))}`);
+    const errMsg = courierErrorMessage(response.error.message, "REGISTER_SHIPMENT", auth.userId);
+    redirect(`/shipments/new?error=${encodeURIComponent(errMsg)}&requestId=${requestId}`);
   }
+
+  // Log successful operation
+  console.log(
+    JSON.stringify({
+      requestId,
+      userId: auth.userId,
+      operation: "REGISTER_SHIPMENT",
+      status: "SUCCESS",
+      timestamp: new Date().toISOString(),
+    })
+  );
 
   const shipment = response.data as { tracking_no?: string } | null;
   if (!shipment?.tracking_no) {
-    redirect(`/shipments/new?error=${encodeURIComponent("The database did not return a tracking number.")}`);
+    redirect(`/shipments/new?error=${encodeURIComponent("The database did not return a tracking number.")}&requestId=${requestId}`);
   }
 
-  redirect(`/shipments/${encodeURIComponent(shipment.tracking_no)}?created=1`);
+  redirect(`/shipments/${encodeURIComponent(shipment.tracking_no)}?created=1&requestId=${requestId}`);
 }

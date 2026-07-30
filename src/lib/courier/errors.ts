@@ -1,27 +1,66 @@
-export function courierErrorMessage(message: string | undefined): string {
-  const value = message ?? "The operation could not be completed.";
-  if (/tracking number not found/i.test(value)) return "Tracking number was not found.";
-  if (/receiver email is required/i.test(value)) return "Enter the receiver's email address.";
-  if (/receiver customer not found/i.test(value)) return "No registered receiver matches that exact email address.";
-  if (/sender and receiver/i.test(value)) return "Sender and receiver must be different customers.";
-  if (/weight.*exceeds|exceeds maximum/i.test(value)) return "Package exceeds the selected service weight limit.";
-  if (/weight must be greater/i.test(value)) return "Weight must be greater than zero.";
-  if (/origin and destination/i.test(value)) return "Origin and destination hubs must be different.";
-  if (/duplicate|unique/i.test(value)) return "A shipment with these unique details already exists.";
-  if (/not authenticated/i.test(value)) return "Your session has expired. Sign in again.";
-  if (/unauthorized|permission|row-level security/i.test(value)) return "You do not have permission to perform this action.";
-  
-  // Phase 9 status transitions and hub operator mappings
-  if (/cannot move backwards|backward/i.test(value)) return "Status cannot move backwards.";
-  if (/must repeat or advance|skipped status/i.test(value)) return "Status must repeat or advance exactly one step.";
-  if (/terminal|event after delivered|no event can be added after closure/i.test(value)) return "No further events can be recorded after a package has reached a terminal status (Delivered or Returned).";
-  if (/package is not at this hub/i.test(value)) return "Unauthorized: package is not at this hub.";
-  if (/does not belong to hub/i.test(value)) return "Staff member does not belong to this hub.";
-  
-  // Phase 9 delivery attempt mappings
-  if (/driver not found/i.test(value)) return "Driver was not found.";
-  if (/failure reason is required/i.test(value)) return "Failure reason is required for a failed delivery attempt.";
-  if (/failure reason must be null/i.test(value)) return "Failure reason must be null for a successful delivery.";
-  
-  return value.includes(":") ? value.split(":").slice(-1)[0].trim() : "The database rejected the request. Check the form and try again.";
+import { randomUUID } from "crypto";
+
+/**
+ * Maps database and system level error messages into clean, user-friendly, and secure messages.
+ * Logs structured server-side diagnostic information containing a requestId and excluding any raw secrets or PII.
+ */
+export function courierErrorMessage(
+  message: string | undefined,
+  operation = "UNKNOWN_OPERATION",
+  userId?: string
+): string {
+  const value = message ?? "";
+  const requestId = randomUUID();
+  let errorCategory = "UNKNOWN";
+  let mappedMessage = "An unexpected error occurred. Please try again.";
+
+  // 1. Precise Error Mapping Logic
+  if (/duplicate.*tracking_no|tracking_no.*exists/i.test(value)) {
+    errorCategory = "DUPLICATE_TRACKING";
+    mappedMessage = "Tracking number already exists";
+  } else if (/sender.*receiver/i.test(value)) {
+    errorCategory = "SENDER_RECEIVER_MATCH";
+    mappedMessage = "Sender and receiver must differ";
+  } else if (/exceed.*limit|exceeds maximum|weight.*exceeds/i.test(value)) {
+    errorCategory = "TIER_LIMIT_EXCEEDED";
+    mappedMessage = "Package exceeds service limit";
+  } else if (/cannot move backwards|backward/i.test(value)) {
+    errorCategory = "BACKWARD_STATUS";
+    mappedMessage = "Status cannot move backwards";
+  } else if (/must repeat or advance|skipped status/i.test(value)) {
+    errorCategory = "SKIPPED_STATUS";
+    mappedMessage = "Status must repeat or advance one step";
+  } else if (/terminal|event after delivered|no event can be added after closure/i.test(value)) {
+    errorCategory = "TERMINAL_PACKAGE";
+    mappedMessage = "No event can be added after closure";
+  } else if (/driver.*unavailable|driver is unavailable/i.test(value)) {
+    errorCategory = "DRIVER_DOUBLE_BOOKED";
+    mappedMessage = "Driver is unavailable at this time";
+  } else if (/vehicle.*unavailable|vehicle is unavailable/i.test(value)) {
+    errorCategory = "VEHICLE_DOUBLE_BOOKED";
+    mappedMessage = "Vehicle is unavailable at this time";
+  } else if (/failure reason is required/i.test(value)) {
+    errorCategory = "MISSING_FAILURE_REASON";
+    mappedMessage = "Failure reason is required";
+  } else if (/unauthorized|permission|row-level security|permission denied/i.test(value)) {
+    errorCategory = "PERMISSION_DENIED";
+    mappedMessage = "You do not have permission";
+  } else if (value && value.includes(":")) {
+    // Other database check constraints or standard errors
+    errorCategory = "DATABASE_CONSTRAINT";
+    mappedMessage = value.split(":").slice(-1)[0].trim();
+  }
+
+  // 2. Structured Server-Side Logging (No secrets, cookie headers or raw PII)
+  console.log(
+    JSON.stringify({
+      requestId,
+      userId: userId || "UNauthenticated",
+      operation,
+      errorCategory,
+      timestamp: new Date().toISOString(),
+    })
+  );
+
+  return mappedMessage;
 }
